@@ -1,99 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Loan Prediction</title>
+{% if result %}
+  <h3>Result: {{ result }}</h3>
+{% endif %}
 
-  <!-- Minimal styling (NOT changing your UI heavily) -->
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    .box { max-width: 900px; margin: 0 auto; }
-    .row { display: flex; gap: 12px; flex-wrap: wrap; }
-    .field { flex: 1; min-width: 200px; margin-bottom: 12px; }
-    label { display: block; margin-bottom: 6px; font-weight: 600; }
-    input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
-    button { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; }
-    .btn { background: #2563eb; color: #fff; }
-    .result { margin-top: 16px; padding: 12px; border-radius: 10px; }
-    .approved { background: #dcfce7; border: 1px solid #16a34a; color: #14532d; }
-    .rejected { background: #fee2e2; border: 1px solid #ef4444; color: #7f1d1d; }
-    .error { background: #fff7ed; border: 1px solid #fb923c; color: #7c2d12; }
-    table { width: 100%; border-collapse: collapse; margin-top: 14px; }
-    th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-    th { background: #f3f4f6; }
-  </style>
-</head>
-<body>
-  <div class="box">
-    <h2>Loan Prediction</h2>
+{% if history and result %}
+  <h3>All Previous Loan Data (History)</h3>
 
-    <!-- ✅ Your Predict Form -->
-    <form method="POST">
-      <div class="row">
-        <div class="field">
-          <label>Name</label>
-          <input type="text" name="name" placeholder="Enter name" required />
-        </div>
+  <table border="1" cellpadding="8" cellspacing="0">
+    <tr>
+      <th>ID</th>
+      <th>Data</th>
+      <th>Result</th>
+      <th>Date</th>
+    </tr>
 
-        <div class="field">
-          <label>Income</label>
-          <input type="number" name="income" placeholder="Enter income" required />
-        </div>
-
-        <div class="field">
-          <label>Credit Score</label>
-          <input type="number" name="credit_score" placeholder="Enter credit score" required />
-        </div>
-
-        <div class="field">
-          <label>Loan Amount</label>
-          <input type="number" name="loan_amount" placeholder="Enter loan amount" required />
-        </div>
-      </div>
-
-      <button class="btn" type="submit">Predict</button>
-    </form>
-
-    <!-- ✅ Show current prediction result -->
-    {% if result %}
-      {% if result == "Approved" %}
-        <div class="result approved"><b>Result:</b> Loan Approved ✅</div>
-      {% elif result == "Rejected" %}
-        <div class="result rejected"><b>Result:</b> Loan Rejected ❌</div>
-      {% else %}
-        <div class="result error"><b>Message:</b> {{ result }}</div>
-      {% endif %}
-    {% endif %}
-
-    <!-- ✅ Show all previous + current data -->
-    {% if all_data and (result == "Approved" or result == "Rejected") %}
-      <h3 style="margin-top: 22px;">All Loan Applications (History)</h3>
-      <table>
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Income</th>
-          <th>Credit Score</th>
-          <th>Loan Amount</th>
-          <th>Result</th>
-          <th>Created</th>
-        </tr>
-
-        {% for row in all_data %}
-          <tr>
-            <td>{{ row.id }}</td>
-            <td>{{ row.name }}</td>
-            <td>{{ row.income }}</td>
-            <td>{{ row.credit_score }}</td>
-            <td>{{ row.loan_amount }}</td>
-            <td>{{ row.result }}</td>
-            <td>{{ row.created_at }}</td>
-          </tr>
+    {% for item in history %}
+    <tr>
+      <td>{{ item.id }}</td>
+      <td>
+        {% for k, v in item.data.items() %}
+          <div><b>{{ k }}:</b> {{ v }}</div>
         {% endfor %}
-      </table>
-    {% endif %}
-
-  </div>
-</body>
-</html>
+      </td>
+      <td>{{ item.result }}</td>
+      <td>{{ item.created_at }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+{% endif %}
