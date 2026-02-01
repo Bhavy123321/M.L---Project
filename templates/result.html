@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% set title = "Result • LoanSense" %}
+
+{% block content %}
+<section class="hero">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="glass p-4 p-md-5">
+          <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+            <div>
+              <div class="badge-glow mb-2">Prediction Result</div>
+              <h2 class="fw-bold mb-1">{{ status }}</h2>
+              <p class="text-soft mb-0">
+                Probability (default-risk): <span class="fw-semibold">{{ proba }}%</span>
+              </p>
+            </div>
+
+            <div class="score">
+              <div class="score-title">Confidence</div>
+              <div class="score-value">{{ confidence }}%</div>
+            </div>
+          </div>
+
+          <hr class="soft-line my-4">
+
+          <div class="row g-3">
+            <div class="col-md-4"><div class="kv"><div class="k">Age</div><div class="v">{{ age }}</div></div></div>
+            <div class="col-md-4"><div class="kv"><div class="k">Income</div><div class="v">{{ income }}</div></div></div>
+            <div class="col-md-4"><div class="kv"><div class="k">Loan Amount</div><div class="v">{{ loan_amount }}</div></div></div>
+
+            <div class="col-md-4"><div class="kv"><div class="k">Credit Score</div><div class="v">{{ credit_score }}</div></div></div>
+            <div class="col-md-4"><div class="kv"><div class="k">DTI Ratio</div><div class="v">{{ dti }}</div></div></div>
+            <div class="col-md-4"><div class="kv"><div class="k">Education</div><div class="v">{{ education }}</div></div></div>
+
+            <div class="col-md-12"><div class="kv"><div class="k">Employment</div><div class="v">{{ employment }}</div></div></div>
+          </div>
+
+          <div class="mt-4">
+            <div class="progress progress-soft" role="progressbar" aria-valuenow="{{ proba }}" aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-bar" style="width: {{ proba }}%"></div>
+            </div>
+            <div class="d-flex justify-content-between text-soft small mt-2">
+              <span>Low risk</span>
+              <span>High risk</span>
+            </div>
+          </div>
+
+          {% if hints and pred == 1 %}
+          <div class="alert alert-warning mt-4">
+            <strong>Possible risk factors:</strong>
+            <ul class="mb-0">
+              {% for h in hints %}
+                <li>{{ h }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <div class="d-flex gap-3 flex-wrap mt-4">
+            <a class="btn btn-primary btn-lg px-4" href="/">Try Another</a>
+            <button class="btn btn-outline-light btn-lg px-4" onclick="window.print()">Print</button>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="glass p-4 h-100">
+          <h5 class="fw-bold mb-3">Tips to improve chances</h5>
+          <ul class="text-soft">
+            <li>Keep <b>DTI</b> below ~0.35–0.45 if possible.</li>
+            <li>Improve <b>Credit Score</b> by paying bills on time.</li>
+            <li>Avoid a very high <b>Loan Amount</b> compared to income.</li>
+            <li>Stable <b>Employment</b> helps in most credit policies.</li>
+          </ul>
+
+          <div class="note mt-4">
+            <div class="note-title">Note</div>
+            <div class="note-text">
+              This is an ML prediction based on your dataset (column: <b>Default</b>).
+              It’s a decision-support tool, not a legal guarantee.
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

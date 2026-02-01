@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% set title = "Loan Prediction • LoanSense" %}
+
+{% block content %}
+<section class="hero">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-6">
+        <div class="badge-glow mb-3">Logistic Regression • Scikit-learn Pipeline</div>
+        <h1 class="display-6 fw-bold mb-3">Smart Loan Approval UI</h1>
+        <p class="lead text-soft mb-4">
+          Enter applicant details and instantly get a prediction with confidence.
+          Clean, modern, and Railway-ready.
+        </p>
+
+        <div class="d-flex gap-3 flex-wrap">
+          <a href="#formCard" class="btn btn-primary btn-lg px-4">Start Prediction</a>
+          <a href="#how" class="btn btn-outline-light btn-lg px-4">How it works</a>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="glass p-4 p-md-5" id="formCard">
+          <h3 class="fw-bold mb-1">Applicant Form</h3>
+          <p class="text-soft mb-4">Fill the fields carefully (DTI example: 0.35)</p>
+
+          {% if error %}
+            <div class="alert alert-danger">
+              <strong>Fix this:</strong> {{ error }}
+            </div>
+          {% endif %}
+
+          <form action="/predict" method="POST" class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Age</label>
+              <input type="number" class="form-control form-control-lg" name="Age"
+                     value="{{ form.Age if form else '' }}" placeholder="e.g. 28" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Income</label>
+              <input type="number" class="form-control form-control-lg" name="Income"
+                     value="{{ form.Income if form else '' }}" placeholder="e.g. 60000" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Loan Amount</label>
+              <input type="number" class="form-control form-control-lg" name="LoanAmount"
+                     value="{{ form.LoanAmount if form else '' }}" placeholder="e.g. 15000" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Credit Score</label>
+              <input type="number" class="form-control form-control-lg" name="CreditScore"
+                     value="{{ form.CreditScore if form else '' }}" placeholder="e.g. 720" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">DTI Ratio</label>
+              <input type="text" class="form-control form-control-lg" name="DTIRatio"
+                     value="{{ form.DTIRatio if form else '' }}" placeholder="e.g. 0.35" required>
+              <div class="form-text text-soft">DTI = total debt payments / income (0 to 1+)</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Education</label>
+              <select class="form-select form-select-lg" name="Education" required>
+                <option value="" disabled {% if not form %}selected{% endif %}>Select</option>
+                {% for opt in education_options %}
+                  <option value="{{ opt }}" {% if form and form.Education == opt %}selected{% endif %}>{{ opt }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label">Employment Type</label>
+              <select class="form-select form-select-lg" name="EmploymentType" required>
+                <option value="" disabled {% if not form %}selected{% endif %}>Select</option>
+                {% for opt in employment_options %}
+                  <option value="{{ opt }}" {% if form and form.EmploymentType == opt %}selected{% endif %}>{{ opt }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-12 d-grid mt-2">
+              <button class="btn btn-primary btn-lg">
+                Predict Now
+              </button>
+            </div>
+          </form>
+
+          <div class="mini-stats mt-4">
+            <div class="mini">
+              <div class="mini-title">Fast</div>
+              <div class="mini-value">Instant</div>
+            </div>
+            <div class="mini">
+              <div class="mini-title">UI</div>
+              <div class="mini-value">Modern</div>
+            </div>
+            <div class="mini">
+              <div class="mini-title">Deploy</div>
+              <div class="mini-value">Railway</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mt-4" id="how">
+      <div class="col-md-4">
+        <div class="glass p-4 h-100">
+          <h5 class="fw-bold">1) Input</h5>
+          <p class="text-soft mb-0">You enter numeric + categorical values.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="glass p-4 h-100">
+          <h5 class="fw-bold">2) Pipeline</h5>
+          <p class="text-soft mb-0">Model preprocesses (scales + one-hot) automatically.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="glass p-4 h-100">
+          <h5 class="fw-bold">3) Prediction</h5>
+          <p class="text-soft mb-0">You get decision + probability + hints.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
