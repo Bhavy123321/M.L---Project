@@ -1,7 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // Smooth scroll to error if present
   const alert = document.querySelector(".alert-danger");
-  const formCard = document.getElementById("formCard");
-  if (alert && formCard) {
-    formCard.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+  if (alert) alert.scrollIntoView({ behavior: "smooth", block: "start" });
 });
