@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% set title = "LoanSense • About" %}
+
+{% block content %}
+<section class="heroWrap">
+  <div class="container">
+    <div class="glassCard">
+      <div class="pill">About</div>
+      <h2 class="heroTitle mt-2">About LoanSense</h2>
+      <p class="heroText">
+        LoanSense is a ML-powered loan approval prediction app built with Flask and scikit-learn.
+        It accepts applicant details and returns a prediction along with probability and helpful hints.
+      </p>
+
+      <div class="divider"></div>
+
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="kv">
+            <div class="k">What it does</div>
+            <div class="v">Predicts approval/rejection based on input risk factors.</div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="kv">
+            <div class="k">Tech stack</div>
+            <div class="v">Flask • scikit-learn • pandas • Railway</div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="kv">
+            <div class="k">Why this UI</div>
+            <div class="v">Premium glass UI, responsive layout, modern components.</div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="kv">
+            <div class="k">Connect with me</div>
+            <div class="v">
+              <a class="linkBright" href="{{ social.linkedin }}" target="_blank" rel="noreferrer">LinkedIn</a>
+              <span class="sep">•</span>
+              <a class="linkBright" href="{{ social.github }}" target="_blank" rel="noreferrer">GitHub</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btnGlow" href="/">Go to Predictor</a>
+        <a class="btn btn-outline-light" href="/reviews">See Reviews</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
