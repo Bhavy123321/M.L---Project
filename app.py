@@ -2,10 +2,10 @@ from flask import Flask, render_template, request
 import joblib
 import numpy as np
 import pandas as pd
+import os
 
 app = Flask(__name__)
 
-# Load trained pipeline model (preprocessor + classifier)
 MODEL_PATH = "loan_model.pkl"
 model = joblib.load(MODEL_PATH)
 
@@ -32,6 +32,16 @@ def home():
     )
 
 
+@app.route("/version", methods=["GET"])
+def version():
+    # Use this to confirm Railway is running latest code
+    return {
+        "status": "ok",
+        "code_version": "final-ui-pipeline-dataframe",
+        "file": __file__,
+    }
+
+
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
@@ -49,7 +59,7 @@ def predict():
         if employment not in EMPLOYMENT_OPTIONS:
             raise ValueError("Please select a valid Employment Type.")
 
-        # Basic sanity checks (adjust if you want)
+        # sanity checks
         if age <= 0 or age > 100:
             raise ValueError("Age should be between 1 and 100.")
         if income < 0:
@@ -61,7 +71,7 @@ def predict():
         if dti < 0 or dti > 2:
             raise ValueError("DTI Ratio looks invalid (0–2 typical). Example: 0.35")
 
-        # ✅ FIX: Model pipeline expects a pandas DataFrame with exact column names
+        # ✅ IMPORTANT FIX: Pipeline expects DataFrame with exact column names
         X = pd.DataFrame([{
             "Age": age,
             "Income": income,
@@ -75,31 +85,33 @@ def predict():
         # Predict
         pred = int(model.predict(X)[0])
 
-        # Predict probability (if available)
+        # Probability (if available)
         try:
             proba = float(model.predict_proba(X)[0][1])  # probability of class "1"
         except Exception:
-            proba = 0.0
+            proba = None
 
         # UI labels
         status = "Approved ✅" if pred == 0 else "Rejected ❌"
 
-        confidence = round((1 - proba) * 100, 2) if pred == 0 else round(proba * 100, 2)
+        confidence = None
+        if proba is not None:
+            confidence = round((1 - proba) * 100, 2) if pred == 0 else round(proba * 100, 2)
 
-        # A friendly reason hint (not “true explanation”, just UX)
+        # UX hints
         hints = []
         if credit_score < 650:
             hints.append("Low Credit Score")
         if dti > 0.45:
             hints.append("High DTI Ratio")
-        if loan_amount > (income * 0.6) and income > 0:
+        if income > 0 and loan_amount > (income * 0.6):
             hints.append("Loan Amount high vs Income")
 
         return render_template(
             "result.html",
             status=status,
             pred=pred,
-            proba=round(proba * 100, 2),
+            proba=None if proba is None else round(proba * 100, 2),
             confidence=confidence,
             age=age,
             income=income,
@@ -122,7 +134,5 @@ def predict():
 
 
 if __name__ == "__main__":
-    # Railway sets PORT automatically
-    import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
