@@ -1,66 +1,85 @@
 {% extends "base.html" %}
-{% set title = "Loan Prediction • LoanSense" %}
+{% set title = "LoanSense • Predict" %}
 
 {% block content %}
-<section class="hero">
+<section class="heroWrap">
   <div class="container">
-    <div class="row align-items-center g-4">
-
+    <div class="row g-4 align-items-stretch">
       <div class="col-lg-6">
-        <div class="badge-glow mb-3">Scikit-learn Pipeline • Prediction UI</div>
-        <h1 class="display-6 fw-bold mb-3">Loan Approval Prediction</h1>
-        <p class="lead text-soft mb-4">
-          Enter applicant details and instantly get a prediction with probability.
-        </p>
+        <div class="heroCard">
+          <div class="pill">Next-Gen ML UI • Fast • Clean</div>
+          <h1 class="heroTitle">Loan Approval Prediction</h1>
+          <p class="heroText">
+            Enter applicant details and get a modern, clean result with probability + helpful hints.
+          </p>
 
-        <div class="d-flex gap-3 flex-wrap">
-          <a href="#formCard" class="btn btn-primary btn-lg px-4">Start</a>
-          <a href="#tips" class="btn btn-outline-light btn-lg px-4">Tips</a>
+          <div class="miniStats">
+            <div class="miniStat">
+              <div class="miniTop">Real-time</div>
+              <div class="miniBig">Prediction</div>
+            </div>
+            <div class="miniStat">
+              <div class="miniTop">Smart</div>
+              <div class="miniBig">Hints</div>
+            </div>
+            <div class="miniStat">
+              <div class="miniTop">Premium</div>
+              <div class="miniBig">UI</div>
+            </div>
+          </div>
+
+          <div class="quickLinks">
+            <a class="qBtn" href="/about">About</a>
+            <a class="qBtn" href="/reviews">Reviews</a>
+          </div>
         </div>
       </div>
 
       <div class="col-lg-6">
-        <div class="glass p-4 p-md-5" id="formCard">
-          <h3 class="fw-bold mb-1">Applicant Form</h3>
-          <p class="text-soft mb-4">DTI example: 0.35</p>
+        <div class="glassCard">
+          <div class="cardHead">
+            <div>
+              <div class="cardTitle">Applicant Form</div>
+              <div class="cardSub">DTI example: 0.35</div>
+            </div>
+          </div>
 
           {% if error %}
-            <div class="alert alert-danger">
-              <strong>Error:</strong> {{ error }}
+            <div class="alert alert-danger mt-3">
+              <b>Fix this:</b> {{ error }}
             </div>
           {% endif %}
 
-          <form action="/predict" method="POST" class="row g-3">
-
+          <form action="/predict" method="POST" class="row g-3 mt-2">
             <div class="col-md-6">
               <label class="form-label">Age</label>
-              <input type="number" class="form-control form-control-lg" name="Age"
-                     value="{{ form.Age if form else '' }}" placeholder="e.g. 28" required>
+              <input class="form-control form-control-lg" name="Age" type="number" required
+                     value="{{ form.Age if form else '' }}" placeholder="e.g. 28">
             </div>
 
             <div class="col-md-6">
               <label class="form-label">Income</label>
-              <input type="number" class="form-control form-control-lg" name="Income"
-                     value="{{ form.Income if form else '' }}" placeholder="e.g. 60000" required>
+              <input class="form-control form-control-lg" name="Income" type="number" required
+                     value="{{ form.Income if form else '' }}" placeholder="e.g. 60000">
             </div>
 
             <div class="col-md-6">
               <label class="form-label">Loan Amount</label>
-              <input type="number" class="form-control form-control-lg" name="LoanAmount"
-                     value="{{ form.LoanAmount if form else '' }}" placeholder="e.g. 15000" required>
+              <input class="form-control form-control-lg" name="LoanAmount" type="number" required
+                     value="{{ form.LoanAmount if form else '' }}" placeholder="e.g. 15000">
             </div>
 
             <div class="col-md-6">
               <label class="form-label">Credit Score</label>
-              <input type="number" class="form-control form-control-lg" name="CreditScore"
-                     value="{{ form.CreditScore if form else '' }}" placeholder="e.g. 720" required>
+              <input class="form-control form-control-lg" name="CreditScore" type="number" required
+                     value="{{ form.CreditScore if form else '' }}" placeholder="e.g. 720">
             </div>
 
             <div class="col-md-6">
               <label class="form-label">DTI Ratio</label>
-              <input type="text" class="form-control form-control-lg" name="DTIRatio"
-                     value="{{ form.DTIRatio if form else '' }}" placeholder="e.g. 0.35" required>
-              <div class="form-text text-soft">Example: 0.35 (35%)</div>
+              <input class="form-control form-control-lg" name="DTIRatio" type="text" required
+                     value="{{ form.DTIRatio if form else '' }}" placeholder="e.g. 0.35">
+              <div class="helpText">DTI = total debt payments / income (0 to 1+)</div>
             </div>
 
             <div class="col-md-6">
@@ -73,7 +92,7 @@
               </select>
             </div>
 
-            <div class="col-md-12">
+            <div class="col-12">
               <label class="form-label">Employment Type</label>
               <select class="form-select form-select-lg" name="EmploymentType" required>
                 <option value="" disabled {% if not form %}selected{% endif %}>Select</option>
@@ -84,36 +103,20 @@
             </div>
 
             <div class="col-12 d-grid mt-2">
-              <button class="btn btn-primary btn-lg">Predict Now</button>
+              <button class="btn btnGlow btn-lg">Predict Now</button>
             </div>
-
           </form>
-        </div>
-      </div>
 
-    </div>
+          <div class="divider"></div>
 
-    <div class="row g-4 mt-4" id="tips">
-      <div class="col-md-4">
-        <div class="glass p-4 h-100">
-          <h5 class="fw-bold">Tip 1</h5>
-          <p class="text-soft mb-0">Keep DTI below ~0.35–0.45 if possible.</p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="glass p-4 h-100">
-          <h5 class="fw-bold">Tip 2</h5>
-          <p class="text-soft mb-0">Higher credit score improves approval chances.</p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="glass p-4 h-100">
-          <h5 class="fw-bold">Tip 3</h5>
-          <p class="text-soft mb-0">Loan amount should be reasonable vs income.</p>
+          <div class="microTips">
+            <div class="microTip">✅ Credit score 700+ helps</div>
+            <div class="microTip">✅ DTI below 0.40 is safer</div>
+            <div class="microTip">✅ Stable employment matters</div>
+          </div>
         </div>
       </div>
     </div>
-
   </div>
 </section>
 {% endblock %}
