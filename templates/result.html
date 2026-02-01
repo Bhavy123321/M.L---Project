@@ -1,75 +1,97 @@
 {% extends "base.html" %}
-{% set title = "Result • LoanSense" %}
+{% set title = "LoanSense • Result" %}
 
 {% block content %}
-<section class="hero">
+<section class="heroWrap">
   <div class="container">
     <div class="row g-4">
-
-      <div class="col-lg-7">
-        <div class="glass p-4 p-md-5">
-          <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+      <div class="col-lg-8">
+        <div class="glassCard">
+          <div class="resultTop">
             <div>
-              <div class="badge-glow mb-2">Prediction Result</div>
-              <h2 class="fw-bold mb-1">{{ status }}</h2>
+              <div class="pill">Prediction Result</div>
+              <h2 class="resultTitle mt-2">{{ status }}</h2>
+              <div class="text-soft">
+                {% if proba is not none %}
+                  Default-risk probability: <b>{{ proba }}%</b>
+                {% else %}
+                  Probability not available
+                {% endif %}
+                {% if confidence is not none %}
+                  • Confidence: <b>{{ confidence }}%</b>
+                {% endif %}
+              </div>
+            </div>
 
-              {% if proba is not none %}
-                <p class="text-soft mb-0">Default-risk probability: <span class="fw-semibold">{{ proba }}%</span></p>
-              {% else %}
-                <p class="text-soft mb-0">Probability not available</p>
-              {% endif %}
-
-              {% if confidence is not none %}
-                <p class="text-soft mb-0">Confidence: <span class="fw-semibold">{{ confidence }}%</span></p>
-              {% endif %}
+            <div class="resultBtns">
+              <a class="btn btn-outline-light" href="/">Try Again</a>
+              <a class="btn btn-outline-light" href="/reviews">Add Review</a>
             </div>
           </div>
 
-          <hr class="soft-line my-4">
+          <div class="divider"></div>
 
-          <div class="row g-3">
-            <div class="col-md-4"><div class="kv"><div class="k">Age</div><div class="v">{{ age }}</div></div></div>
-            <div class="col-md-4"><div class="kv"><div class="k">Income</div><div class="v">{{ income }}</div></div></div>
-            <div class="col-md-4"><div class="kv"><div class="k">Loan Amount</div><div class="v">{{ loan_amount }}</div></div></div>
-
-            <div class="col-md-4"><div class="kv"><div class="k">Credit Score</div><div class="v">{{ credit_score }}</div></div></div>
-            <div class="col-md-4"><div class="kv"><div class="k">DTI Ratio</div><div class="v">{{ dti }}</div></div></div>
-            <div class="col-md-4"><div class="kv"><div class="k">Education</div><div class="v">{{ education }}</div></div></div>
-
-            <div class="col-md-12"><div class="kv"><div class="k">Employment</div><div class="v">{{ employment }}</div></div></div>
+          <div class="grid2">
+            <div class="kv"><div class="k">Age</div><div class="v">{{ age }}</div></div>
+            <div class="kv"><div class="k">Income</div><div class="v">{{ income }}</div></div>
+            <div class="kv"><div class="k">Loan Amount</div><div class="v">{{ loan_amount }}</div></div>
+            <div class="kv"><div class="k">Credit Score</div><div class="v">{{ credit_score }}</div></div>
+            <div class="kv"><div class="k">DTI Ratio</div><div class="v">{{ dti }}</div></div>
+            <div class="kv"><div class="k">Education</div><div class="v">{{ education }}</div></div>
+            <div class="kv wide"><div class="k">Employment</div><div class="v">{{ employment }}</div></div>
           </div>
 
-          {% if hints and pred == 1 %}
-          <div class="alert alert-warning mt-4">
-            <strong>Possible risk factors:</strong>
-            <ul class="mb-0">
-              {% for h in hints %}
-                <li>{{ h }}</li>
-              {% endfor %}
-            </ul>
-          </div>
+          {% if hints %}
+            <div class="hintBox mt-4">
+              <div class="hintTitle">Helpful hints</div>
+              <ul class="mb-0">
+                {% for h in hints %}
+                  <li>{{ h }}</li>
+                {% endfor %}
+              </ul>
+            </div>
           {% endif %}
+        </div>
+      </div>
 
-          <div class="d-flex gap-3 flex-wrap mt-4">
-            <a class="btn btn-primary btn-lg px-4" href="/">Try Another</a>
-            <button class="btn btn-outline-light btn-lg px-4" onclick="window.print()">Print</button>
+      <div class="col-lg-4">
+        <div class="glassCard">
+          <div class="cardTitle">Improve your chances</div>
+          <div class="cardSub mt-1">Simple suggestions</div>
+
+          <div class="divider"></div>
+
+          <div class="steps">
+            <div class="step">
+              <div class="stepNum">1</div>
+              <div>
+                <div class="stepTitle">Lower DTI</div>
+                <div class="text-soft">Reduce existing debt payments.</div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="stepNum">2</div>
+              <div>
+                <div class="stepTitle">Improve credit score</div>
+                <div class="text-soft">Pay bills on time and keep utilization low.</div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="stepNum">3</div>
+              <div>
+                <div class="stepTitle">Balance loan amount</div>
+                <div class="text-soft">Keep it reasonable compared to income.</div>
+              </div>
+            </div>
           </div>
 
+          <div class="divider"></div>
+
+          <a class="btn btnGlow w-100" href="/about">About this project</a>
         </div>
       </div>
-
-      <div class="col-lg-5">
-        <div class="glass p-4 h-100">
-          <h5 class="fw-bold mb-3">How to improve</h5>
-          <ul class="text-soft">
-            <li>Lower your <b>DTI</b> ratio.</li>
-            <li>Increase <b>credit score</b> (pay bills on time).</li>
-            <li>Keep loan amount reasonable vs income.</li>
-            <li>Stable employment helps.</li>
-          </ul>
-        </div>
-      </div>
-
     </div>
   </div>
 </section>
