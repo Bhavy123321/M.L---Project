@@ -6,32 +6,41 @@ import os
 
 app = Flask(__name__)
 
+# ============ Model ============
 MODEL_PATH = "loan_model.pkl"
 model = joblib.load(MODEL_PATH)
 
 EDUCATION_OPTIONS = ["High School", "Bachelor's", "Master's", "PhD"]
 EMPLOYMENT_OPTIONS = ["Full-time", "Part-time", "Self-employed", "Unemployed"]
 
-# ✅ Put your real links here
+# ✅ Replace with your real URLs
 SOCIAL_LINKS = {
-    "linkedin": "https://www.linkedin.com/in/bhavy-soni-6123a32b0/",
-    "github": "https://github.com/Bhavy123321"
+    "linkedin": "https://www.linkedin.com/in/YOUR-USERNAME/",
+    "github": "https://github.com/YOUR-USERNAME"
 }
 
-# Simple in-memory reviews (resets when app restarts)
+# Simple in-memory reviews (resets if container restarts)
 REVIEWS = [
     {
         "name": "Aarav",
         "rating": 5,
-        "message": "Clean UI and super fast prediction. Loved it!",
+        "message": "Super clean UI and fast prediction. Looks premium.",
         "tag": "Student"
     },
     {
         "name": "Neha",
         "rating": 4,
-        "message": "Very smooth experience. Looks professional.",
+        "message": "Nice design and helpful hints. Great for demo!",
         "tag": "Developer"
     }
+]
+
+# For About page "stats"
+PROJECT_STATS = [
+    {"label": "ML Pipeline", "value": "scikit-learn"},
+    {"label": "Deployment", "value": "Railway"},
+    {"label": "UI Style", "value": "Premium Glass"},
+    {"label": "Pages", "value": "Predict • About • Reviews"},
 ]
 
 
@@ -48,7 +57,10 @@ def to_float(value, field_name):
 @app.context_processor
 def inject_globals():
     # Available in all templates automatically
-    return dict(social=SOCIAL_LINKS)
+    return dict(
+        social=SOCIAL_LINKS,
+        brand_name="LoanSense"
+    )
 
 
 @app.route("/", methods=["GET"])
@@ -62,45 +74,64 @@ def home():
 
 @app.route("/about", methods=["GET"])
 def about():
-    return render_template("about.html")
+    return render_template("about.html", stats=PROJECT_STATS)
 
 
-@app.route("/reviews", methods=["GET"])
+# ✅ SINGLE route handles GET + POST to avoid internal server errors
+@app.route("/reviews", methods=["GET", "POST"])
 def reviews():
-    # show latest first
-    latest = list(reversed(REVIEWS))
-    return render_template("reviews.html", reviews=latest)
-
-
-@app.route("/reviews", methods=["POST"])
-def add_review():
-    name = (request.form.get("name") or "").strip()[:40]
-    tag = (request.form.get("tag") or "").strip()[:30]
-    message = (request.form.get("message") or "").strip()[:300]
-    rating_raw = (request.form.get("rating") or "").strip()
-
     try:
-        rating = int(rating_raw)
-    except Exception:
-        rating = 5
+        if request.method == "POST":
+            name = (request.form.get("name") or "").strip()[:40]
+            tag = (request.form.get("tag") or "").strip()[:30]
+            message = (request.form.get("message") or "").strip()[:300]
+            rating_raw = (request.form.get("rating") or "").strip()
 
-    if not name:
-        name = "Anonymous"
-    if not tag:
-        tag = "User"
-    if not message:
-        message = "Great project!"
+            try:
+                rating = int(rating_raw)
+            except Exception:
+                rating = 5
 
-    rating = max(1, min(5, rating))
+            if not name:
+                name = "Anonymous"
+            if not tag:
+                tag = "User"
+            if not message:
+                message = "Great project!"
 
-    REVIEWS.append({
-        "name": name,
-        "rating": rating,
-        "message": message,
-        "tag": tag
-    })
+            rating = max(1, min(5, rating))
 
-    return redirect(url_for("reviews"))
+            REVIEWS.append({
+                "name": name,
+                "rating": rating,
+                "message": message,
+                "tag": tag
+            })
+
+            return redirect(url_for("reviews"))
+
+        # GET
+        latest = list(reversed(REVIEWS))
+        avg_rating = 0
+        if REVIEWS:
+            avg_rating = round(sum(r["rating"] for r in REVIEWS) / len(REVIEWS), 1)
+
+        return render_template(
+            "reviews.html",
+            reviews=latest,
+            avg_rating=avg_rating,
+            total_reviews=len(REVIEWS)
+        )
+
+    except Exception as e:
+        # If anything breaks, show an error nicely instead of 500
+        return render_template(
+            "reviews.html",
+            reviews=list(reversed(REVIEWS)),
+            avg_rating=0,
+            total_reviews=len(REVIEWS),
+            page_error=str(e)
+        ), 200
 
 
 @app.route("/predict", methods=["POST"])
@@ -131,7 +162,7 @@ def predict():
         if dti < 0 or dti > 2:
             raise ValueError("DTI Ratio looks invalid (0–2 typical). Example: 0.35")
 
-        # ✅ DataFrame with exact column names
+        # ✅ DataFrame with exact feature names
         X = pd.DataFrame([{
             "Age": age,
             "Income": income,
@@ -145,15 +176,19 @@ def predict():
         pred = int(model.predict(X)[0])
 
         try:
-            proba = float(model.predict_proba(X)[0][1])
+            proba = float(model.predict_proba(X)[0][1])  # probability of class "1"
         except Exception:
             proba = None
 
         status = "Approved ✅" if pred == 0 else "Rejected ❌"
 
         confidence = None
+        risk_pct = None
+        safe_pct = None
         if proba is not None:
-            confidence = round((1 - proba) * 100, 2) if pred == 0 else round(proba * 100, 2)
+            risk_pct = round(proba * 100, 2)
+            safe_pct = round((1 - proba) * 100, 2)
+            confidence = safe_pct if pred == 0 else risk_pct
 
         hints = []
         if credit_score < 650:
@@ -162,6 +197,8 @@ def predict():
             hints.append("High DTI Ratio")
         if income > 0 and loan_amount > (income * 0.6):
             hints.append("Loan Amount high vs Income")
+        if employment == "Unemployed":
+            hints.append("Employment stability risk")
 
         return render_template(
             "result.html",
@@ -169,6 +206,8 @@ def predict():
             pred=pred,
             proba=None if proba is None else round(proba * 100, 2),
             confidence=confidence,
+            risk_pct=risk_pct,
+            safe_pct=safe_pct,
             age=age,
             income=income,
             loan_amount=loan_amount,
@@ -192,4 +231,3 @@ def predict():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
-
