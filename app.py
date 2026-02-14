@@ -3,6 +3,7 @@ import joblib
 import numpy as np
 import pandas as pd
 import os
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -13,29 +14,18 @@ model = joblib.load(MODEL_PATH)
 EDUCATION_OPTIONS = ["High School", "Bachelor's", "Master's", "PhD"]
 EMPLOYMENT_OPTIONS = ["Full-time", "Part-time", "Self-employed", "Unemployed"]
 
-# ✅ Replace with your real URLs
+# ✅ Put your real URLs
 SOCIAL_LINKS = {
     "linkedin": "https://www.linkedin.com/in/YOUR-USERNAME/",
     "github": "https://github.com/YOUR-USERNAME"
 }
 
-# Simple in-memory reviews (resets if container restarts)
+# ✅ In-memory reviews (works fine for demo/projects)
 REVIEWS = [
-    {
-        "name": "Aarav",
-        "rating": 5,
-        "message": "Super clean UI and fast prediction. Looks premium.",
-        "tag": "Student"
-    },
-    {
-        "name": "Neha",
-        "rating": 4,
-        "message": "Nice design and helpful hints. Great for demo!",
-        "tag": "Developer"
-    }
+    {"name": "Aarav", "rating": 5, "message": "Super clean UI and fast prediction.", "tag": "Student", "date": "2026-02-14"},
+    {"name": "Neha", "rating": 4, "message": "Nice design and helpful hints. Great for demo!", "tag": "Developer", "date": "2026-02-14"}
 ]
 
-# For About page "stats"
 PROJECT_STATS = [
     {"label": "ML Pipeline", "value": "scikit-learn"},
     {"label": "Deployment", "value": "Railway"},
@@ -56,7 +46,6 @@ def to_float(value, field_name):
 
 @app.context_processor
 def inject_globals():
-    # Available in all templates automatically
     return dict(
         social=SOCIAL_LINKS,
         brand_name="LoanSense"
@@ -77,27 +66,20 @@ def about():
     return render_template("about.html", stats=PROJECT_STATS)
 
 
-# ✅ SINGLE route handles GET + POST to avoid internal server errors
+# ✅ FIXED: Single safe route for GET+POST
 @app.route("/reviews", methods=["GET", "POST"])
-def reviews():
+def reviews_page():
     try:
         if request.method == "POST":
-            name = (request.form.get("name") or "").strip()[:40]
-            tag = (request.form.get("tag") or "").strip()[:30]
-            message = (request.form.get("message") or "").strip()[:300]
-            rating_raw = (request.form.get("rating") or "").strip()
+            name = (request.form.get("name") or "").strip()[:40] or "Anonymous"
+            tag = (request.form.get("tag") or "").strip()[:30] or "User"
+            message = (request.form.get("message") or "").strip()[:400] or "Great project!"
+            rating_raw = (request.form.get("rating") or "5").strip()
 
             try:
                 rating = int(rating_raw)
             except Exception:
                 rating = 5
-
-            if not name:
-                name = "Anonymous"
-            if not tag:
-                tag = "User"
-            if not message:
-                message = "Great project!"
 
             rating = max(1, min(5, rating))
 
@@ -105,31 +87,36 @@ def reviews():
                 "name": name,
                 "rating": rating,
                 "message": message,
-                "tag": tag
+                "tag": tag,
+                "date": datetime.now().strftime("%Y-%m-%d")
             })
 
-            return redirect(url_for("reviews"))
+            return redirect(url_for("reviews_page"))
 
         # GET
         latest = list(reversed(REVIEWS))
-        avg_rating = 0
-        if REVIEWS:
-            avg_rating = round(sum(r["rating"] for r in REVIEWS) / len(REVIEWS), 1)
+        total = len(REVIEWS)
+        avg = round(sum(r["rating"] for r in REVIEWS) / total, 1) if total > 0 else 0
 
         return render_template(
             "reviews.html",
             reviews=latest,
-            avg_rating=avg_rating,
-            total_reviews=len(REVIEWS)
+            total_reviews=total,
+            avg_rating=avg,
+            page_error=None
         )
 
     except Exception as e:
-        # If anything breaks, show an error nicely instead of 500
+        # ✅ Never show 500 now — always render page with error text
+        latest = list(reversed(REVIEWS))
+        total = len(REVIEWS)
+        avg = round(sum(r["rating"] for r in REVIEWS) / total, 1) if total > 0 else 0
+
         return render_template(
             "reviews.html",
-            reviews=list(reversed(REVIEWS)),
-            avg_rating=0,
-            total_reviews=len(REVIEWS),
+            reviews=latest,
+            total_reviews=total,
+            avg_rating=avg,
             page_error=str(e)
         ), 200
 
@@ -176,7 +163,7 @@ def predict():
         pred = int(model.predict(X)[0])
 
         try:
-            proba = float(model.predict_proba(X)[0][1])  # probability of class "1"
+            proba = float(model.predict_proba(X)[0][1])
         except Exception:
             proba = None
 
