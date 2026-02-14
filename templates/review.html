@@ -1,15 +1,35 @@
 {% extends "base.html" %}
-{% set title = "LoanSense • Reviews" %}
+{% set title = brand_name ~ " • Reviews" %}
 
 {% block content %}
 <section class="heroWrap">
   <div class="container">
     <div class="row g-4">
+
       <div class="col-lg-5">
         <div class="glassCard">
           <div class="pill">Reviews</div>
           <h2 class="heroTitle mt-2">Leave a Review</h2>
-          <p class="heroText">Share feedback so others can trust the project.</p>
+          <p class="heroText">Feedback makes your project look more real and trustworthy.</p>
+
+          {% if page_error %}
+            <div class="alert alert-warning">
+              <b>Note:</b> Something happened, but reviews are still showing.<br>
+              <span class="small text-soft">{{ page_error }}</span>
+            </div>
+          {% endif %}
+
+          <div class="ratingSummary">
+            <div class="ratingBig">{{ avg_rating }}</div>
+            <div>
+              <div class="ratingStars">
+                {% set full = avg_rating|int %}
+                {% for _ in range(full) %}★{% endfor %}
+                {% for _ in range(5-full) %}☆{% endfor %}
+              </div>
+              <div class="text-soft small">{{ total_reviews }} total reviews</div>
+            </div>
+          </div>
 
           <form action="/reviews" method="POST" class="mt-3">
             <div class="mb-3">
@@ -19,7 +39,7 @@
 
             <div class="mb-3">
               <label class="form-label">Tag</label>
-              <input class="form-control form-control-lg" name="tag" placeholder="e.g. Student / Recruiter" />
+              <input class="form-control form-control-lg" name="tag" placeholder="e.g. Student / Teacher / Recruiter" />
             </div>
 
             <div class="mb-3">
@@ -40,13 +60,17 @@
             </div>
 
             <div class="d-grid">
-              <button class="btn btnGlow btn-lg">Submit Review</button>
+              <button class="btn btnGlow btn-lg">
+                Submit Review
+                <span class="btnShine"></span>
+              </button>
             </div>
 
             <div class="divider"></div>
 
             <div class="text-soft small">
-              Want to connect? <a class="linkBright" href="{{ social.linkedin }}" target="_blank" rel="noreferrer">LinkedIn</a>
+              Connect:
+              <a class="linkBright" href="{{ social.linkedin }}" target="_blank" rel="noreferrer">LinkedIn</a>
               <span class="sep">•</span>
               <a class="linkBright" href="{{ social.github }}" target="_blank" rel="noreferrer">GitHub</a>
             </div>
@@ -84,6 +108,7 @@
           {% endif %}
         </div>
       </div>
+
     </div>
   </div>
 </section>
