@@ -1,42 +1,54 @@
 {% extends "base.html" %}
-{% set title = "LoanSense • About" %}
+{% set title = brand_name ~ " • About" %}
 
 {% block content %}
 <section class="heroWrap">
   <div class="container">
     <div class="glassCard">
       <div class="pill">About</div>
-      <h2 class="heroTitle mt-2">About LoanSense</h2>
+      <h2 class="heroTitle mt-2">About {{ brand_name }}</h2>
       <p class="heroText">
-        LoanSense is a ML-powered loan approval prediction app built with Flask and scikit-learn.
-        It accepts applicant details and returns a prediction along with probability and helpful hints.
+        {{ brand_name }} is an ML-powered loan approval prediction web app built using Flask and scikit-learn.
+        It takes applicant details and returns approval/rejection with confidence and user-friendly insights.
       </p>
+
+      <div class="divider"></div>
+
+      <div class="row g-3">
+        {% for s in stats %}
+          <div class="col-md-3">
+            <div class="statTile">
+              <div class="statLabel">{{ s.label }}</div>
+              <div class="statValue">{{ s.value }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
 
       <div class="divider"></div>
 
       <div class="row g-4">
         <div class="col-md-6">
-          <div class="kv">
-            <div class="k">What it does</div>
-            <div class="v">Predicts approval/rejection based on input risk factors.</div>
+          <div class="featureCard2">
+            <div class="f2Top">What it does</div>
+            <div class="f2Big">Predicts approval/rejection</div>
+            <div class="f2Sub">Based on risk factors like credit score, DTI, income and loan amount.</div>
           </div>
         </div>
+
         <div class="col-md-6">
-          <div class="kv">
-            <div class="k">Tech stack</div>
-            <div class="v">Flask • scikit-learn • pandas • Railway</div>
+          <div class="featureCard2">
+            <div class="f2Top">Why this UI</div>
+            <div class="f2Big">Teacher-ready demo</div>
+            <div class="f2Sub">Premium glass UI, smooth layout, and clear result presentation.</div>
           </div>
         </div>
-        <div class="col-md-6">
-          <div class="kv">
-            <div class="k">Why this UI</div>
-            <div class="v">Premium glass UI, responsive layout, modern components.</div>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="kv">
-            <div class="k">Connect with me</div>
-            <div class="v">
+
+        <div class="col-md-12">
+          <div class="featureCard2">
+            <div class="f2Top">Connect with me</div>
+            <div class="f2Big">LinkedIn • GitHub</div>
+            <div class="f2Sub">
               <a class="linkBright" href="{{ social.linkedin }}" target="_blank" rel="noreferrer">LinkedIn</a>
               <span class="sep">•</span>
               <a class="linkBright" href="{{ social.github }}" target="_blank" rel="noreferrer">GitHub</a>
@@ -48,7 +60,7 @@
       <div class="divider"></div>
 
       <div class="d-flex gap-2 flex-wrap">
-        <a class="btn btnGlow" href="/">Go to Predictor</a>
+        <a class="btn btnGlow" href="/">Go to Predictor <span class="btnShine"></span></a>
         <a class="btn btn-outline-light" href="/reviews">See Reviews</a>
       </div>
     </div>
