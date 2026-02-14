@@ -1,24 +1,26 @@
 {% extends "base.html" %}
-{% set title = "LoanSense • Result" %}
+{% set title = brand_name ~ " • Result" %}
 
 {% block content %}
 <section class="heroWrap">
   <div class="container">
     <div class="row g-4">
+
       <div class="col-lg-8">
         <div class="glassCard">
           <div class="resultTop">
             <div>
               <div class="pill">Prediction Result</div>
               <h2 class="resultTitle mt-2">{{ status }}</h2>
-              <div class="text-soft">
+
+              <div class="text-soft mt-1">
                 {% if proba is not none %}
                   Default-risk probability: <b>{{ proba }}%</b>
+                  {% if confidence is not none %}
+                    • Confidence: <b>{{ confidence }}%</b>
+                  {% endif %}
                 {% else %}
                   Probability not available
-                {% endif %}
-                {% if confidence is not none %}
-                  • Confidence: <b>{{ confidence }}%</b>
                 {% endif %}
               </div>
             </div>
@@ -28,6 +30,22 @@
               <a class="btn btn-outline-light" href="/reviews">Add Review</a>
             </div>
           </div>
+
+          {% if safe_pct is not none and risk_pct is not none %}
+            <div class="meterWrap mt-3">
+              <div class="meterHead">
+                <div class="text-soft small">Safety vs Risk</div>
+                <div class="meterNums">
+                  <span class="chip ok">Safe: {{ safe_pct }}%</span>
+                  <span class="chip bad">Risk: {{ risk_pct }}%</span>
+                </div>
+              </div>
+              <div class="meter">
+                <div class="meterSafe" style="width: {{ safe_pct }}%"></div>
+                <div class="meterRisk" style="width: {{ risk_pct }}%"></div>
+              </div>
+            </div>
+          {% endif %}
 
           <div class="divider"></div>
 
@@ -51,6 +69,7 @@
               </ul>
             </div>
           {% endif %}
+
         </div>
       </div>
 
@@ -89,8 +108,22 @@
 
           <div class="divider"></div>
 
-          <a class="btn btnGlow w-100" href="/about">About this project</a>
+          <a class="btn btnGlow w-100" href="/about">
+            About this project
+            <span class="btnShine"></span>
+          </a>
         </div>
+
+        <div class="glassCard mt-3">
+          <div class="cardTitle">Connect</div>
+          <div class="cardSub mt-1">Let’s collaborate</div>
+          <div class="divider"></div>
+          <div class="d-flex gap-2">
+            <a class="qBtn flex-fill text-center" href="{{ social.linkedin }}" target="_blank" rel="noreferrer">LinkedIn</a>
+            <a class="qBtn flex-fill text-center" href="{{ social.github }}" target="_blank" rel="noreferrer">GitHub</a>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
