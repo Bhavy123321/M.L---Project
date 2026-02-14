@@ -50,11 +50,25 @@ body{
 
 .page{ min-height: calc(100vh - 150px); }
 
+/* =========================
+   ✅ Header (FIXED ROUTES)
+========================= */
 .topbar{
-  position:sticky; top:0; z-index:50;
+  position:sticky;
+  top:0;
+  z-index:60;
   background: rgba(0,0,0,.25);
   border-bottom:1px solid var(--line);
   backdrop-filter: blur(12px);
+}
+
+/* New header row layout */
+.topbarRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding: 12px 0;
 }
 
 .brand{
@@ -77,18 +91,42 @@ body{
   font-weight: 800;
 }
 
-.navlinks a{
+/* ✅ Center pill navigation */
+.navPill{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding: 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+}
+
+.navItem{
   color: var(--soft);
   text-decoration:none;
-  padding:10px 12px;
-  border-radius:12px;
-  transition:.18s ease;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 900;
+  transition: .18s ease;
+  line-height: 1;
 }
-.navlinks a:hover{ color:var(--text); background: rgba(255,255,255,.06); }
-.navlinks a.active{
-  color:var(--text);
-  background: rgba(255,255,255,.10);
-  border:1px solid var(--line);
+.navItem:hover{
+  color: var(--text);
+  background: rgba(255,255,255,.08);
+}
+.navItem.active{
+  color: var(--text);
+  background: linear-gradient(135deg, rgba(118,75,255,.85), rgba(0,217,255,.75));
+  box-shadow: 0 10px 25px rgba(0,0,0,.25);
+}
+
+/* Right side icons */
+.topRight{
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
 
 .social{ display:flex; gap:10px; align-items:center; }
@@ -106,6 +144,58 @@ body{
   background: rgba(255,255,255,.10);
   box-shadow: 0 10px 30px rgba(0,0,0,.25);
 }
+
+/* Mobile menu button */
+.menuBtn{
+  width:44px;
+  height:44px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.92);
+  font-weight: 1000;
+  transition:.18s ease;
+}
+.menuBtn:hover{
+  background: rgba(255,255,255,.10);
+  transform: translateY(-1px);
+}
+
+/* Mobile Drawer */
+.mobileDrawer{
+  background: rgba(9,12,24,.92);
+  backdrop-filter: blur(14px);
+  color: rgba(255,255,255,.92);
+}
+
+.drawerLink{
+  display:block;
+  padding: 12px 12px;
+  border-radius: 14px;
+  text-decoration:none;
+  color: rgba(255,255,255,.86);
+  font-weight: 900;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.05);
+  margin-bottom: 10px;
+}
+.drawerLink:hover{
+  background: rgba(255,255,255,.10);
+  color: rgba(255,255,255,.95);
+}
+.drawerDivider{
+  height:1px;
+  background: rgba(255,255,255,.12);
+  margin: 14px 0;
+}
+
+/* Hide brandTag on small screens */
+@media (max-width: 768px){
+  .brandTag{ display:none !important; }
+}
+/* =========================
+   Header end
+========================= */
 
 .heroWrap{ padding: 34px 0 54px; }
 
