@@ -10,24 +10,24 @@
         <div class="glassCard">
           <div class="pill">Reviews</div>
           <h2 class="heroTitle mt-2">Leave a Review</h2>
-          <p class="heroText">Feedback makes your project look more real and trustworthy.</p>
+          <p class="heroText">Make your project look more real and trustworthy.</p>
 
           {% if page_error %}
             <div class="alert alert-warning">
-              <b>Note:</b> Something happened, but reviews are still showing.<br>
+              <b>Note:</b> Reviews page had an issue but it’s now recovered.<br>
               <span class="small text-soft">{{ page_error }}</span>
             </div>
           {% endif %}
 
           <div class="ratingSummary">
-            <div class="ratingBig">{{ avg_rating }}</div>
+            <div class="ratingBig">{{ avg_rating if avg_rating is not none else 0 }}</div>
             <div>
               <div class="ratingStars">
-                {% set full = avg_rating|int %}
+                {% set full = (avg_rating|int) if avg_rating is not none else 0 %}
                 {% for _ in range(full) %}★{% endfor %}
                 {% for _ in range(5-full) %}☆{% endfor %}
               </div>
-              <div class="text-soft small">{{ total_reviews }} total reviews</div>
+              <div class="text-soft small">{{ total_reviews if total_reviews is not none else 0 }} total reviews</div>
             </div>
           </div>
 
@@ -39,7 +39,7 @@
 
             <div class="mb-3">
               <label class="form-label">Tag</label>
-              <input class="form-control form-control-lg" name="tag" placeholder="e.g. Student / Teacher / Recruiter" />
+              <input class="form-control form-control-lg" name="tag" placeholder="e.g. Student / Teacher" />
             </div>
 
             <div class="mb-3">
@@ -65,15 +65,6 @@
                 <span class="btnShine"></span>
               </button>
             </div>
-
-            <div class="divider"></div>
-
-            <div class="text-soft small">
-              Connect:
-              <a class="linkBright" href="{{ social.linkedin }}" target="_blank" rel="noreferrer">LinkedIn</a>
-              <span class="sep">•</span>
-              <a class="linkBright" href="{{ social.github }}" target="_blank" rel="noreferrer">GitHub</a>
-            </div>
           </form>
         </div>
       </div>
@@ -86,26 +77,28 @@
           <div class="divider"></div>
 
           <div class="reviewGrid">
-            {% for r in reviews %}
-              <div class="reviewCard">
-                <div class="reviewTop">
-                  <div>
-                    <div class="reviewName">{{ r.name }}</div>
-                    <div class="reviewTag text-soft">{{ r.tag }}</div>
+            {% if reviews and reviews|length > 0 %}
+              {% for r in reviews %}
+                <div class="reviewCard">
+                  <div class="reviewTop">
+                    <div>
+                      <div class="reviewName">{{ r.name if r.name else "Anonymous" }}</div>
+                      <div class="reviewTag text-soft">{{ r.tag if r.tag else "User" }} • {{ r.date if r.date else "" }}</div>
+                    </div>
+                    <div class="reviewStars">
+                      {% set rr = r.rating if r.rating is not none else 5 %}
+                      {% for _ in range(rr) %}★{% endfor %}
+                      {% for _ in range(5-rr) %}☆{% endfor %}
+                    </div>
                   </div>
-                  <div class="reviewStars">
-                    {% for _ in range(r.rating) %}★{% endfor %}
-                    {% for _ in range(5 - r.rating) %}☆{% endfor %}
-                  </div>
+                  <div class="reviewMsg">{{ r.message if r.message else "Great project!" }}</div>
                 </div>
-                <div class="reviewMsg">{{ r.message }}</div>
-              </div>
-            {% endfor %}
+              {% endfor %}
+            {% else %}
+              <div class="text-soft">No reviews yet. Be the first!</div>
+            {% endif %}
           </div>
 
-          {% if reviews|length == 0 %}
-            <div class="text-soft">No reviews yet. Be the first!</div>
-          {% endif %}
         </div>
       </div>
 
