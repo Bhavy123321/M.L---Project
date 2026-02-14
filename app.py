@@ -22,8 +22,7 @@ SOCIAL_LINKS = {
 
 # ✅ In-memory reviews (works fine for demo/projects)
 REVIEWS = [
-    {"name": "Aarav", "rating": 5, "message": "Super clean UI and fast prediction.", "tag": "Student", "date": "2026-02-14"},
-    {"name": "Neha", "rating": 4, "message": "Nice design and helpful hints. Great for demo!", "tag": "Developer", "date": "2026-02-14"}
+    
 ]
 
 PROJECT_STATS = [
@@ -218,3 +217,4 @@ def predict():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
+
