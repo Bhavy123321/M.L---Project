@@ -1,17 +1,46 @@
 {% extends "base.html" %}
-{% set title = "LoanSense • Predict" %}
+{% set title = brand_name ~ " • Predict" %}
 
 {% block content %}
 <section class="heroWrap">
   <div class="container">
     <div class="row g-4 align-items-stretch">
+
       <div class="col-lg-6">
         <div class="heroCard">
           <div class="pill">Next-Gen ML UI • Fast • Clean</div>
+
           <h1 class="heroTitle">Loan Approval Prediction</h1>
           <p class="heroText">
-            Enter applicant details and get a modern, clean result with probability + helpful hints.
+            Enter applicant details and get a modern prediction with probability, confidence and helpful hints.
+            Designed to impress in demos and project evaluations.
           </p>
+
+          <div class="trustStrip">
+            <div class="trustItem">
+              <div class="trustIcon">⚡</div>
+              <div>
+                <div class="trustTitle">Instant Result</div>
+                <div class="trustSub">Fast inference</div>
+              </div>
+            </div>
+
+            <div class="trustItem">
+              <div class="trustIcon">🛡️</div>
+              <div>
+                <div class="trustTitle">Validations</div>
+                <div class="trustSub">Clean inputs</div>
+              </div>
+            </div>
+
+            <div class="trustItem">
+              <div class="trustIcon">✨</div>
+              <div>
+                <div class="trustTitle">Premium UI</div>
+                <div class="trustSub">Glass design</div>
+              </div>
+            </div>
+          </div>
 
           <div class="miniStats">
             <div class="miniStat">
@@ -23,15 +52,30 @@
               <div class="miniBig">Hints</div>
             </div>
             <div class="miniStat">
-              <div class="miniTop">Premium</div>
-              <div class="miniBig">UI</div>
+              <div class="miniTop">Teacher-Ready</div>
+              <div class="miniBig">Demo</div>
+            </div>
+          </div>
+
+          <div class="featureRow">
+            <div class="featureCard">
+              <div class="fTop">How it works</div>
+              <div class="fBig">Input → Model → Result</div>
+              <div class="fSub">Preprocessing + classification pipeline</div>
+            </div>
+            <div class="featureCard">
+              <div class="fTop">Export-ready</div>
+              <div class="fBig">Screenshots</div>
+              <div class="fSub">Perfect for report/viva</div>
             </div>
           </div>
 
           <div class="quickLinks">
             <a class="qBtn" href="/about">About</a>
             <a class="qBtn" href="/reviews">Reviews</a>
+            <a class="qBtn" href="{{ social.github }}" target="_blank" rel="noreferrer">Source</a>
           </div>
+
         </div>
       </div>
 
@@ -42,6 +86,7 @@
               <div class="cardTitle">Applicant Form</div>
               <div class="cardSub">DTI example: 0.35</div>
             </div>
+            <div class="badgeSoft d-none d-sm-inline">Pipeline Model</div>
           </div>
 
           {% if error %}
@@ -103,7 +148,10 @@
             </div>
 
             <div class="col-12 d-grid mt-2">
-              <button class="btn btnGlow btn-lg">Predict Now</button>
+              <button class="btn btnGlow btn-lg">
+                Predict Now
+                <span class="btnShine"></span>
+              </button>
             </div>
           </form>
 
@@ -114,8 +162,10 @@
             <div class="microTip">✅ DTI below 0.40 is safer</div>
             <div class="microTip">✅ Stable employment matters</div>
           </div>
+
         </div>
       </div>
+
     </div>
   </div>
 </section>
