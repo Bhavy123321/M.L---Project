@@ -4,89 +4,18 @@
 {% block content %}
 <section class="heroWrap">
   <div class="container">
-    <div class="row g-4 align-items-stretch">
+    <div class="row justify-content-center">
 
-      <div class="col-lg-6">
-        <div class="heroCard">
-          <div class="pill">Next-Gen ML UI • Fast • Clean</div>
+      <!-- LEFT SIDE REMOVED COMPLETELY -->
 
-          <h1 class="heroTitle">Loan Approval Prediction</h1>
-          <p class="heroText">
-            Enter applicant details and get a modern prediction with probability, confidence and helpful hints.
-            Designed to impress in demos and project evaluations.
-          </p>
-
-          <div class="trustStrip">
-            <div class="trustItem">
-              <div class="trustIcon">⚡</div>
-              <div>
-                <div class="trustTitle">Instant Result</div>
-                <div class="trustSub">Fast inference</div>
-              </div>
-            </div>
-
-            <div class="trustItem">
-              <div class="trustIcon">🛡️</div>
-              <div>
-                <div class="trustTitle">Validations</div>
-                <div class="trustSub">Clean inputs</div>
-              </div>
-            </div>
-
-            <div class="trustItem">
-              <div class="trustIcon">✨</div>
-              <div>
-                <div class="trustTitle">Premium UI</div>
-                <div class="trustSub">Glass design</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="miniStats">
-            <div class="miniStat">
-              <div class="miniTop">Real-time</div>
-              <div class="miniBig">Prediction</div>
-            </div>
-            <div class="miniStat">
-              <div class="miniTop">Smart</div>
-              <div class="miniBig">Hints</div>
-            </div>
-            <div class="miniStat">
-              <div class="miniTop">Teacher-Ready</div>
-              <div class="miniBig">Demo</div>
-            </div>
-          </div>
-
-          <div class="featureRow">
-            <div class="featureCard">
-              <div class="fTop">How it works</div>
-              <div class="fBig">Input → Model → Result</div>
-              <div class="fSub">Preprocessing + classification pipeline</div>
-            </div>
-            <div class="featureCard">
-              <div class="fTop">Export-ready</div>
-              <div class="fBig">Screenshots</div>
-              <div class="fSub">Perfect for report/viva</div>
-            </div>
-          </div>
-
-          <div class="quickLinks">
-            <a class="qBtn" href="/about">About</a>
-            <a class="qBtn" href="/reviews">Reviews</a>
-            <a class="qBtn" href="{{ social.github }}" target="_blank" rel="noreferrer">Source</a>
-          </div>
-
-        </div>
-      </div>
-
-      <div class="col-lg-6">
+      <div class="col-lg-7 col-xl-6">
         <div class="glassCard">
           <div class="cardHead">
             <div>
               <div class="cardTitle">Applicant Form</div>
               <div class="cardSub">DTI example: 0.35</div>
             </div>
-            <div class="badgeSoft d-none d-sm-inline">Pipeline Model</div>
+            <!-- Pipeline Model badge REMOVED -->
           </div>
 
           {% if error %}
@@ -96,63 +25,109 @@
           {% endif %}
 
           <form action="/predict" method="POST" class="row g-3 mt-2">
+
+            <!-- AGE -->
             <div class="col-md-6">
               <label class="form-label">Age</label>
-              <input class="form-control form-control-lg" name="Age" type="number" required
-                     value="{{ form.Age if form else '' }}" placeholder="e.g. 28">
+              <input class="form-control form-control-lg positive-only"
+                     name="Age"
+                     type="number"
+                     min="1"
+                     step="1"
+                     required
+                     value="{{ form.Age if form else '' }}"
+                     placeholder="e.g. 28">
             </div>
 
+            <!-- INCOME -->
             <div class="col-md-6">
               <label class="form-label">Income</label>
-              <input class="form-control form-control-lg" name="Income" type="number" required
-                     value="{{ form.Income if form else '' }}" placeholder="e.g. 60000">
+              <input class="form-control form-control-lg positive-only"
+                     name="Income"
+                     type="number"
+                     min="0.000001"
+                     step="any"
+                     required
+                     value="{{ form.Income if form else '' }}"
+                     placeholder="e.g. 60000">
             </div>
 
+            <!-- LOAN AMOUNT -->
             <div class="col-md-6">
               <label class="form-label">Loan Amount</label>
-              <input class="form-control form-control-lg" name="LoanAmount" type="number" required
-                     value="{{ form.LoanAmount if form else '' }}" placeholder="e.g. 15000">
+              <input class="form-control form-control-lg positive-only"
+                     name="LoanAmount"
+                     type="number"
+                     min="0.000001"
+                     step="any"
+                     required
+                     value="{{ form.LoanAmount if form else '' }}"
+                     placeholder="e.g. 15000">
             </div>
 
+            <!-- CREDIT SCORE -->
             <div class="col-md-6">
               <label class="form-label">Credit Score</label>
-              <input class="form-control form-control-lg" name="CreditScore" type="number" required
-                     value="{{ form.CreditScore if form else '' }}" placeholder="e.g. 720">
+              <input class="form-control form-control-lg positive-only"
+                     name="CreditScore"
+                     type="number"
+                     min="1"
+                     step="1"
+                     required
+                     value="{{ form.CreditScore if form else '' }}"
+                     placeholder="e.g. 720">
             </div>
 
+            <!-- DTI -->
             <div class="col-md-6">
               <label class="form-label">DTI Ratio</label>
-              <input class="form-control form-control-lg" name="DTIRatio" type="text" required
-                     value="{{ form.DTIRatio if form else '' }}" placeholder="e.g. 0.35">
+              <input class="form-control form-control-lg positive-only"
+                     name="DTIRatio"
+                     type="number"
+                     min="0.000001"
+                     step="any"
+                     required
+                     value="{{ form.DTIRatio if form else '' }}"
+                     placeholder="e.g. 0.35">
               <div class="helpText">DTI = total debt payments / income (0 to 1+)</div>
             </div>
 
+            <!-- EDUCATION -->
             <div class="col-md-6">
               <label class="form-label">Education</label>
               <select class="form-select form-select-lg" name="Education" required>
                 <option value="" disabled {% if not form %}selected{% endif %}>Select</option>
                 {% for opt in education_options %}
-                  <option value="{{ opt }}" {% if form and form.Education == opt %}selected{% endif %}>{{ opt }}</option>
+                  <option value="{{ opt }}"
+                    {% if form and form.Education == opt %}selected{% endif %}>
+                    {{ opt }}
+                  </option>
                 {% endfor %}
               </select>
             </div>
 
+            <!-- EMPLOYMENT -->
             <div class="col-12">
               <label class="form-label">Employment Type</label>
               <select class="form-select form-select-lg" name="EmploymentType" required>
                 <option value="" disabled {% if not form %}selected{% endif %}>Select</option>
                 {% for opt in employment_options %}
-                  <option value="{{ opt }}" {% if form and form.EmploymentType == opt %}selected{% endif %}>{{ opt }}</option>
+                  <option value="{{ opt }}"
+                    {% if form and form.EmploymentType == opt %}selected{% endif %}>
+                    {{ opt }}
+                  </option>
                 {% endfor %}
               </select>
             </div>
 
+            <!-- BUTTON -->
             <div class="col-12 d-grid mt-2">
               <button class="btn btnGlow btn-lg">
                 Predict Now
                 <span class="btnShine"></span>
               </button>
             </div>
+
           </form>
 
           <div class="divider"></div>
@@ -169,4 +144,34 @@
     </div>
   </div>
 </section>
+
+<!-- Strict Positive Real Number Enforcement -->
+<script>
+document.querySelectorAll('.positive-only').forEach(function(input){
+
+  // Block invalid characters
+  input.addEventListener("keydown", function(e){
+    if (["-", "+", "e", "E"].includes(e.key)) {
+      e.preventDefault();
+    }
+  });
+
+  input.addEventListener("input", function(){
+    if (this.value === "") return;
+
+    let val = parseFloat(this.value);
+
+    if (isNaN(val) || val <= 0) {
+      this.value = "";
+    }
+
+    // Force integer fields
+    if (this.step === "1" && this.value !== "") {
+      this.value = Math.floor(val);
+    }
+  });
+
+});
+</script>
+
 {% endblock %}
