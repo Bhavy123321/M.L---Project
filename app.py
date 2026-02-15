@@ -3,7 +3,9 @@ import joblib
 import numpy as np
 import pandas as pd
 import os
+import json
 from datetime import datetime
+from collections import defaultdict
 
 app = Flask(__name__)
 
@@ -22,15 +24,35 @@ SOCIAL_LINKS = {
 
 # ✅ In-memory reviews (works fine for demo/projects)
 REVIEWS = [
-    
 ]
 
 PROJECT_STATS = [
     {"label": "ML Pipeline", "value": "scikit-learn"},
     {"label": "Deployment", "value": "Railway"},
     {"label": "UI Style", "value": "Premium Glass"},
-    {"label": "Pages", "value": "Predict • About • Reviews"},
+    {"label": "Pages", "value": "Predict • About • Reviews • Dashboard"},
 ]
+
+# ============ Dashboard storage ============
+PRED_FILE = "predictions.json"
+
+
+def load_predictions():
+    if not os.path.exists(PRED_FILE):
+        return []
+    try:
+        with open(PRED_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
+def save_prediction(entry: dict):
+    data = load_predictions()
+    data.append(entry)
+    with open(PRED_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
 
 
 def to_float(value, field_name):
@@ -106,7 +128,6 @@ def reviews_page():
         )
 
     except Exception as e:
-        # ✅ Never show 500 now — always render page with error text
         latest = list(reversed(REVIEWS))
         total = len(REVIEWS)
         avg = round(sum(r["rating"] for r in REVIEWS) / total, 1) if total > 0 else 0
@@ -137,16 +158,17 @@ def predict():
         if employment not in EMPLOYMENT_OPTIONS:
             raise ValueError("Please select a valid Employment Type.")
 
+        # ✅ STRICT: only positive real numbers allowed in ALL numeric fields
         if age <= 0 or age > 100:
-            raise ValueError("Age should be between 1 and 100.")
-        if income < 0:
-            raise ValueError("Income cannot be negative.")
+            raise ValueError("Age should be between 1 and 100 (positive only).")
+        if income <= 0:
+            raise ValueError("Income must be greater than 0 (positive only).")
         if loan_amount <= 0:
-            raise ValueError("Loan Amount must be greater than 0.")
-        if credit_score < 0 or credit_score > 1000:
-            raise ValueError("Credit Score looks invalid (0–1000 expected).")
-        if dti < 0 or dti > 2:
-            raise ValueError("DTI Ratio looks invalid (0–2 typical). Example: 0.35")
+            raise ValueError("Loan Amount must be greater than 0 (positive only).")
+        if credit_score <= 0 or credit_score > 1000:
+            raise ValueError("Credit Score looks invalid (1–1000 expected).")
+        if dti <= 0 or dti > 2:
+            raise ValueError("DTI Ratio looks invalid (must be > 0 and <= 2). Example: 0.35")
 
         # ✅ DataFrame with exact feature names
         X = pd.DataFrame([{
@@ -166,7 +188,9 @@ def predict():
         except Exception:
             proba = None
 
+        # Your project mapping: pred==0 Approved
         status = "Approved ✅" if pred == 0 else "Rejected ❌"
+        result_label = "Approved" if pred == 0 else "Rejected"
 
         confidence = None
         risk_pct = None
@@ -185,6 +209,21 @@ def predict():
             hints.append("Loan Amount high vs Income")
         if employment == "Unemployed":
             hints.append("Employment stability risk")
+
+        # ✅ SAVE for dashboard counts + charts
+        save_prediction({
+            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "Age": round(float(age), 4),
+            "Income": round(float(income), 4),
+            "LoanAmount": round(float(loan_amount), 4),
+            "CreditScore": round(float(credit_score), 4),
+            "DTIRatio": round(float(dti), 6),
+            "Education": education,
+            "EmploymentType": employment,
+            "pred": pred,
+            "result": result_label,
+            "probability": None if proba is None else round(proba * 100, 2),
+        })
 
         return render_template(
             "result.html",
@@ -214,7 +253,38 @@ def predict():
         )
 
 
+# ✅ NEW: Dashboard route
+@app.route("/dashboard", methods=["GET"])
+def dashboard():
+    data = load_predictions()
+
+    total = len(data)
+    approved = sum(1 for x in data if x.get("result") == "Approved")
+    rejected = sum(1 for x in data if x.get("result") == "Rejected")
+
+    # Trend by day (YYYY-MM-DD)
+    daily = defaultdict(int)
+    for x in data:
+        d = (x.get("created_at", "")[:10]).strip()
+        if d:
+            daily[d] += 1
+
+    trend_labels = sorted(daily.keys())
+    trend_counts = [daily[d] for d in trend_labels]
+
+    recent = list(reversed(data))[:10]
+
+    return render_template(
+        "dashboard.html",
+        total=total,
+        approved=approved,
+        rejected=rejected,
+        trend_labels=trend_labels,
+        trend_counts=trend_counts,
+        recent=recent,
+    )
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
-
