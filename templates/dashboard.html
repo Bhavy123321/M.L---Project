@@ -10,12 +10,12 @@
         <div>
           <div class="pill">Dashboard</div>
           <h2 class="heroTitle mt-2">Loan Predictions Overview</h2>
-          <p class="heroText mb-0">Live summary of approvals/rejections + charts.</p>
+          <p class="heroText mb-0">Approved/Rejected counts + charts + recent predictions.</p>
         </div>
 
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
           <a class="btn btn-outline-light" href="/">Go to Predictor</a>
-          <a class="btn btnGlow" href="/reviews">Reviews <span class="btnShine"></span></a>
+          <a class="btn btn-outline-light" href="/reviews">Reviews</a>
         </div>
       </div>
 
@@ -117,11 +117,8 @@
   </div>
 </section>
 
-<!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
-  // server data -> JS
   const approved = {{ approved }};
   const rejected = {{ rejected }};
   const trendLabels = {{ trend_labels|tojson }};
@@ -132,10 +129,7 @@
     type: "doughnut",
     data: {
       labels: ["Approved", "Rejected"],
-      datasets: [{
-        data: [approved, rejected],
-        borderWidth: 0
-      }]
+      datasets: [{ data: [approved, rejected], borderWidth: 0 }]
     },
     options: {
       responsive: true,
@@ -162,11 +156,9 @@
       maintainAspectRatio: false,
       scales: {
         x: { ticks: { color: "#fff" }, grid: { color: "rgba(255,255,255,.08)" } },
-        y: { ticks: { color: "#fff" }, grid: { color: "rgba(255,255,255,.08)" } }
+        y: { ticks: { color: "#fff" }, grid: { color: "rgba(255,255,255,.08)" }, beginAtZero: true }
       },
-      plugins: {
-        legend: { labels: { color: "#fff" } }
-      }
+      plugins: { legend: { labels: { color: "#fff" } } }
     }
   });
 </script>
