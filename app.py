@@ -18,8 +18,8 @@ EMPLOYMENT_OPTIONS = ["Full-time", "Part-time", "Self-employed", "Unemployed"]
 
 # ✅ Put your real URLs
 SOCIAL_LINKS = {
-    "linkedin": "https://www.linkedin.com/in/YOUR-USERNAME/",
-    "github": "https://github.com/YOUR-USERNAME"
+    "linkedin": "https://www.linkedin.com/in/bhavy-soni-6123a32b0/",
+    "github": "https://github.com/Bhavy123321"
 }
 
 # ✅ In-memory reviews (works fine for demo/projects)
@@ -288,3 +288,4 @@ def dashboard():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
+
