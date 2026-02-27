@@ -4,50 +4,32 @@ import numpy as np
 import pandas as pd
 import os
 
-# ---------------------------------------------------------
-# App setup
-# ---------------------------------------------------------
 app = Flask(__name__)
 
-# Make sure Flask can find templates/static (default is ok if folders are in root)
-# app = Flask(__name__, template_folder="templates", static_folder="static")
-
-# ---------------------------------------------------------
-# Load ML model (use absolute path so it works on Render/Linux)
-# ---------------------------------------------------------
+# --------------------------------------------------
+# Load Model (Render-safe path)
+# --------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "loan_model.pkl")
-
 model = joblib.load(MODEL_PATH)
 
-# Dropdown options (adjust if your model expects different values)
+# Dropdown values
 EDUCATION_OPTIONS = ["High School", "Bachelor's", "Master's", "PhD"]
 EMPLOYMENT_OPTIONS = ["Full-time", "Part-time", "Self-employed", "Unemployed"]
 
 
-def to_float(value, field_name):
-    try:
-        v = float(value)
-        if np.isnan(v) or np.isinf(v):
-            raise ValueError
-        return v
-    except Exception:
-        raise ValueError(f"Invalid value for {field_name}")
-
-
-# ---------------------------------------------------------
-# Routes
-# ---------------------------------------------------------
-
-# ✅ Home opens Dashboard directly
-@app.route("/", methods=["GET"])
-def dashboard():
-    # your repo has templates/dashboard.html
+# --------------------------------------------------
+# HOME → Dashboard directly
+# --------------------------------------------------
+@app.route("/")
+def home():
     return render_template("dashboard.html")
 
 
-# Optional: If you still want the prediction form page
-@app.route("/predictor", methods=["GET"])
+# --------------------------------------------------
+# Prediction Form Page
+# --------------------------------------------------
+@app.route("/predictor")
 def predictor():
     return render_template(
         "index.html",
@@ -56,38 +38,22 @@ def predictor():
     )
 
 
-# Keep your prediction route
+# --------------------------------------------------
+# Prediction Logic
+# --------------------------------------------------
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
-        age = to_float(request.form.get("Age", ""), "Age")
-        income = to_float(request.form.get("Income", ""), "Income")
-        loan_amount = to_float(request.form.get("LoanAmount", ""), "LoanAmount")
-        credit_score = to_float(request.form.get("CreditScore", ""), "CreditScore")
-        dti = to_float(request.form.get("DTIRatio", ""), "DTIRatio")
+        age = float(request.form["Age"])
+        income = float(request.form["Income"])
+        loan_amount = float(request.form["LoanAmount"])
+        credit_score = float(request.form["CreditScore"])
+        dti = float(request.form["DTIRatio"])
+        education = request.form["Education"]
+        employment = request.form["EmploymentType"]
 
-        education = (request.form.get("Education") or "").strip()
-        employment = (request.form.get("EmploymentType") or "").strip()
-
-        if education not in EDUCATION_OPTIONS:
-            raise ValueError("Please select a valid Education.")
-        if employment not in EMPLOYMENT_OPTIONS:
-            raise ValueError("Please select a valid Employment Type.")
-
-        # Basic sanity checks (adjust if needed)
-        if age <= 0 or age > 100:
-            raise ValueError("Age should be between 1 and 100.")
-        if income < 0:
-            raise ValueError("Income cannot be negative.")
-        if loan_amount <= 0:
-            raise ValueError("Loan Amount must be greater than 0.")
-        if credit_score < 0 or credit_score > 1000:
-            raise ValueError("Credit Score looks invalid (0–1000 expected).")
-        if dti < 0 or dti > 2:
-            raise ValueError("DTI Ratio looks invalid (0–2 typical). Example: 0.35")
-
-        # Model expects a DataFrame with exact column names
-        X = pd.DataFrame([{
+        # Create dataframe
+        data = pd.DataFrame([{
             "Age": age,
             "Income": income,
             "LoanAmount": loan_amount,
@@ -97,62 +63,22 @@ def predict():
             "EmploymentType": employment
         }])
 
-        pred = int(model.predict(X)[0])
+        prediction = model.predict(data)[0]
 
-        # Predict probability (if available)
-        try:
-            proba = float(model.predict_proba(X)[0][1])  # probability of class "1"
-        except Exception:
-            proba = 0.0
+        if prediction == 1:
+            result = "Loan Rejected ❌"
+        else:
+            result = "Loan Approved ✅"
 
-        status = "Approved ✅" if pred == 0 else "Rejected ❌"
-        confidence = round((1 - proba) * 100, 2) if pred == 0 else round(proba * 100, 2)
-
-        hints = []
-        if credit_score < 650:
-            hints.append("Low Credit Score")
-        if dti > 0.45:
-            hints.append("High DTI Ratio")
-        if income > 0 and loan_amount > (income * 0.6):
-            hints.append("Loan Amount high vs Income")
-
-        return render_template(
-            "result.html",
-            status=status,
-            pred=pred,
-            proba=round(proba * 100, 2),
-            confidence=confidence,
-            age=age,
-            income=income,
-            loan_amount=loan_amount,
-            credit_score=credit_score,
-            dti=dti,
-            education=education,
-            employment=employment,
-            hints=hints,
-        )
+        return render_template("result.html", result=result)
 
     except Exception as e:
-        # Send user back to predictor page with error
-        return render_template(
-            "index.html",
-            education_options=EDUCATION_OPTIONS,
-            employment_options=EMPLOYMENT_OPTIONS,
-            error=str(e),
-            form=request.form,
-        )
+        return f"Error: {str(e)}"
 
 
-# Optional: If someone tries /login, just redirect to dashboard (no 500)
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    return redirect(url_for("dashboard"))
-
-
-# ---------------------------------------------------------
-# Local run (Render uses Start Command / gunicorn)
-# ---------------------------------------------------------
+# --------------------------------------------------
+# Run App (important for Render)
+# --------------------------------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    # debug=False for production-like behavior
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port)
