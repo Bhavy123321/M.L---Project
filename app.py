@@ -1,35 +1,38 @@
 from flask import Flask, render_template, request, redirect, url_for
-import joblib
-import numpy as np
-import pandas as pd
 import os
+import joblib
+import pandas as pd
 
 app = Flask(__name__)
 
-# --------------------------------------------------
-# Load Model (Render-safe path)
-# --------------------------------------------------
+# -----------------------------
+# Load model (Render-safe path)
+# -----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "loan_model.pkl")
 model = joblib.load(MODEL_PATH)
 
-# Dropdown values
+# If you use dropdowns in your HTML, keep these
 EDUCATION_OPTIONS = ["High School", "Bachelor's", "Master's", "PhD"]
 EMPLOYMENT_OPTIONS = ["Full-time", "Part-time", "Self-employed", "Unemployed"]
 
 
-# --------------------------------------------------
-# HOME → Dashboard directly
-# --------------------------------------------------
-@app.route("/")
+# -----------------------------
+# Home -> Dashboard
+# -----------------------------
+@app.route("/", methods=["GET"])
 def home():
     return render_template("dashboard.html")
 
 
-# --------------------------------------------------
-# Prediction Form Page
-# --------------------------------------------------
-@app.route("/predictor")
+# Optional direct dashboard route too
+@app.route("/dashboard", methods=["GET"])
+def dashboard():
+    return render_template("dashboard.html")
+
+
+# Prediction form page (if your form is on index.html)
+@app.route("/predictor", methods=["GET"])
 def predictor():
     return render_template(
         "index.html",
@@ -38,21 +41,21 @@ def predictor():
     )
 
 
-# --------------------------------------------------
-# Prediction Logic
-# --------------------------------------------------
+# -----------------------------
+# Predict
+# -----------------------------
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
-        age = float(request.form["Age"])
-        income = float(request.form["Income"])
-        loan_amount = float(request.form["LoanAmount"])
-        credit_score = float(request.form["CreditScore"])
-        dti = float(request.form["DTIRatio"])
-        education = request.form["Education"]
-        employment = request.form["EmploymentType"]
+        # Match your form field names exactly
+        age = float(request.form.get("Age", 0))
+        income = float(request.form.get("Income", 0))
+        loan_amount = float(request.form.get("LoanAmount", 0))
+        credit_score = float(request.form.get("CreditScore", 0))
+        dti = float(request.form.get("DTIRatio", 0))
+        education = request.form.get("Education", "")
+        employment = request.form.get("EmploymentType", "")
 
-        # Create dataframe
         data = pd.DataFrame([{
             "Age": age,
             "Income": income,
@@ -60,25 +63,38 @@ def predict():
             "CreditScore": credit_score,
             "DTIRatio": dti,
             "Education": education,
-            "EmploymentType": employment
+            "EmploymentType": employment,
         }])
 
-        prediction = model.predict(data)[0]
+        pred = int(model.predict(data)[0])
 
-        if prediction == 1:
-            result = "Loan Rejected ❌"
-        else:
-            result = "Loan Approved ✅"
+        # Adjust label if your model uses 0/1 differently
+        result = "Loan Approved ✅" if pred == 0 else "Loan Rejected ❌"
 
         return render_template("result.html", result=result)
 
     except Exception as e:
-        return f"Error: {str(e)}"
+        # Send back to predictor page with an error
+        return render_template(
+            "index.html",
+            education_options=EDUCATION_OPTIONS,
+            employment_options=EMPLOYMENT_OPTIONS,
+            error=str(e),
+        )
 
 
-# --------------------------------------------------
-# Run App (important for Render)
-# --------------------------------------------------
+# -----------------------------
+# IMPORTANT: Never show "Not Found"
+# Redirect any unknown route to dashboard
+# -----------------------------
+@app.errorhandler(404)
+def page_not_found(e):
+    return redirect(url_for("home"))
+
+
+# -----------------------------
+# Local run (Render uses gunicorn, this is for local testing)
+# -----------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=False)
