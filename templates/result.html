@@ -6,34 +6,113 @@
   <div class="container">
     <div class="glassCard">
 
-      <!-- TOP BAR -->
       <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
         <div>
-          <div class="pill">Result</div>
-          <h2 class="heroTitle mt-2">Prediction Output</h2>
-          <p class="heroText mb-0">Your loan prediction result is shown below.</p>
+          <div class="pill">Prediction Result</div>
+
+          <div class="heroText mt-2">
+            Default-risk probability:
+            <b>{{ risk_prob|default(0) }}%</b>
+            • Confidence:
+            <b>{{ confidence|default(0) }}%</b>
+          </div>
         </div>
 
-        <!-- ✅ NAV BUTTONS -->
         <div class="d-flex gap-2 flex-wrap">
-          <a class="btn btn-outline-light" href="{{ url_for('dashboard') }}">← Dashboard</a>
-          <a class="btn btn-outline-light" href="{{ url_for('predict') }}">Predict Again</a>
-          <a class="btn btn-outline-light" href="{{ url_for('reviews') }}">Reviews</a>
+          <a class="btn btn-outline-light" href="{{ url_for('predict') }}">Try Again</a>
+          <a class="btn btn-outline-light" href="{{ url_for('reviews') }}">Add Review</a>
+          <a class="btn btn-outline-light" href="{{ url_for('dashboard') }}">Dashboard</a>
         </div>
       </div>
 
       <div class="divider"></div>
 
-      <!-- RESULT -->
-      <div class="featureCard2 text-center">
-        <div class="f2Top">Final Status</div>
+      <!-- Safety vs Risk -->
+      <div class="featureCard2">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div class="f2Top mb-0">Safety vs Risk</div>
 
+          <div class="d-flex gap-2">
+            <span class="badge rounded-pill bg-success">Safe: {{ safe_prob|default(0) }}%</span>
+            <span class="badge rounded-pill bg-danger">Risk: {{ risk_prob|default(0) }}%</span>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <div class="progress" style="height: 10px; border-radius: 999px;">
+            <!-- Safe bar -->
+            <div class="progress-bar bg-success"
+                 role="progressbar"
+                 style="width: {{ safe_prob|default(0) }}%;"
+                 aria-valuenow="{{ safe_prob|default(0) }}"
+                 aria-valuemin="0"
+                 aria-valuemax="100"></div>
+
+            <!-- Risk bar -->
+            <div class="progress-bar bg-danger"
+                 role="progressbar"
+                 style="width: {{ risk_prob|default(0) }}%;"
+                 aria-valuenow="{{ risk_prob|default(0) }}"
+                 aria-valuemin="0"
+                 aria-valuemax="100"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Show entered details (optional but matches your UI) -->
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="form-control form-control-lg bg-transparent text-white" style="border-radius:16px;">
+            Age: <b>{{ age|default('') }}</b>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-control form-control-lg bg-transparent text-white" style="border-radius:16px;">
+            Income: <b>{{ income|default('') }}</b>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-control form-control-lg bg-transparent text-white" style="border-radius:16px;">
+            Loan Amount: <b>{{ loan_amount|default('') }}</b>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-control form-control-lg bg-transparent text-white" style="border-radius:16px;">
+            Credit Score: <b>{{ credit_score|default('') }}</b>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-control form-control-lg bg-transparent text-white" style="border-radius:16px;">
+            DTI Ratio: <b>{{ dti_ratio|default('') }}</b>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-control form-control-lg bg-transparent text-white" style="border-radius:16px;">
+            Education: <b>{{ education|default('') }}</b>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="form-control form-control-lg bg-transparent text-white" style="border-radius:16px;">
+            Employment: <b>{{ employment_type|default('') }}</b>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Final decision -->
+      <div class="featureCard2 text-center">
         {% if prediction == 0 %}
           <div class="f2Big" style="color: rgba(46, 213, 115, .95);">{{ result }}</div>
-          <div class="text-soft mt-2">Looks good — based on input values, approval probability is higher.</div>
+          <div class="text-soft mt-2">More indicators look safe based on your inputs.</div>
         {% else %}
           <div class="f2Big" style="color: rgba(255, 71, 87, .95);">{{ result }}</div>
-          <div class="text-soft mt-2">Based on the inputs, rejection probability is higher.</div>
+          <div class="text-soft mt-2">Some indicators show higher risk based on your inputs.</div>
         {% endif %}
       </div>
 
