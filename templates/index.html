@@ -1,177 +1,100 @@
 {% extends "base.html" %}
-{% set title = brand_name ~ " • Predict" %}
+{% set title = brand_name ~ " • Predictor" %}
 
 {% block content %}
 <section class="heroWrap">
   <div class="container">
-    <div class="row justify-content-center">
+    <div class="glassCard">
 
-      <!-- LEFT SIDE REMOVED COMPLETELY -->
+      <!-- TOP BAR -->
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <div class="pill">Predictor</div>
+          <h2 class="heroTitle mt-2">Loan Approval Prediction</h2>
+          <p class="heroText mb-0">Enter details and predict whether the loan will be approved or rejected.</p>
+        </div>
 
-      <div class="col-lg-7 col-xl-6">
-        <div class="glassCard">
-          <div class="cardHead">
-            <div>
-              <div class="cardTitle">Applicant Form</div>
-              <div class="cardSub">DTI example: 0.35</div>
-            </div>
-            <!-- Pipeline Model badge REMOVED -->
+        <!-- ✅ NAV BUTTONS -->
+        <div class="d-flex gap-2 flex-wrap">
+          <a class="btn btn-outline-light" href="{{ url_for('dashboard') }}">← Back to Dashboard</a>
+          <a class="btn btn-outline-light" href="{{ url_for('reviews') }}">Reviews</a>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      {% if error %}
+        <div class="alert alert-danger mb-3">
+          <b>Error:</b> {{ error }}
+        </div>
+      {% endif %}
+
+      <!-- FORM -->
+      <form action="{{ url_for('predict') }}" method="POST">
+        <div class="row g-3">
+
+          <div class="col-md-6">
+            <label class="form-label">Age</label>
+            <input type="number" step="0.01" name="Age" class="form-control form-control-lg" placeholder="e.g. 28" required>
           </div>
 
-          {% if error %}
-            <div class="alert alert-danger mt-3">
-              <b>Fix this:</b> {{ error }}
-            </div>
-          {% endif %}
+          <div class="col-md-6">
+            <label class="form-label">Income</label>
+            <input type="number" step="0.01" name="Income" class="form-control form-control-lg" placeholder="e.g. 50000" required>
+          </div>
 
-          <form action="/predict" method="POST" class="row g-3 mt-2">
+          <div class="col-md-6">
+            <label class="form-label">Loan Amount</label>
+            <input type="number" step="0.01" name="LoanAmount" class="form-control form-control-lg" placeholder="e.g. 200000" required>
+          </div>
 
-            <!-- AGE -->
-            <div class="col-md-6">
-              <label class="form-label">Age</label>
-              <input class="form-control form-control-lg positive-only"
-                     name="Age"
-                     type="number"
-                     min="1"
-                     step="1"
-                     required
-                     value="{{ form.Age if form else '' }}"
-                     placeholder="e.g. 28">
-            </div>
+          <div class="col-md-6">
+            <label class="form-label">Credit Score</label>
+            <input type="number" step="0.01" name="CreditScore" class="form-control form-control-lg" placeholder="e.g. 720" required>
+          </div>
 
-            <!-- INCOME -->
-            <div class="col-md-6">
-              <label class="form-label">Income</label>
-              <input class="form-control form-control-lg positive-only"
-                     name="Income"
-                     type="number"
-                     min="0.000001"
-                     step="any"
-                     required
-                     value="{{ form.Income if form else '' }}"
-                     placeholder="e.g. 60000">
-            </div>
+          <div class="col-md-6">
+            <label class="form-label">DTI Ratio</label>
+            <input type="number" step="0.01" name="DTIRatio" class="form-control form-control-lg" placeholder="e.g. 0.35" required>
+            <div class="text-soft small mt-1">DTI = Debt-to-Income ratio (0 to 1)</div>
+          </div>
 
-            <!-- LOAN AMOUNT -->
-            <div class="col-md-6">
-              <label class="form-label">Loan Amount</label>
-              <input class="form-control form-control-lg positive-only"
-                     name="LoanAmount"
-                     type="number"
-                     min="0.000001"
-                     step="any"
-                     required
-                     value="{{ form.LoanAmount if form else '' }}"
-                     placeholder="e.g. 15000">
-            </div>
+          <div class="col-md-6">
+            <label class="form-label">Education</label>
+            <select name="Education" class="form-select form-select-lg" required>
+              <option value="" selected disabled>Select</option>
+              <option value="High School">High School</option>
+              <option value="Diploma">Diploma</option>
+              <option value="Bachelor">Bachelor</option>
+              <option value="Master">Master</option>
+              <option value="PhD">PhD</option>
+            </select>
+          </div>
 
-            <!-- CREDIT SCORE -->
-            <div class="col-md-6">
-              <label class="form-label">Credit Score</label>
-              <input class="form-control form-control-lg positive-only"
-                     name="CreditScore"
-                     type="number"
-                     min="1"
-                     step="1"
-                     required
-                     value="{{ form.CreditScore if form else '' }}"
-                     placeholder="e.g. 720">
-            </div>
+          <div class="col-md-6">
+            <label class="form-label">Employment Type</label>
+            <select name="EmploymentType" class="form-select form-select-lg" required>
+              <option value="" selected disabled>Select</option>
+              <option value="Salaried">Salaried</option>
+              <option value="Self-Employed">Self-Employed</option>
+              <option value="Business">Business</option>
+              <option value="Unemployed">Unemployed</option>
+            </select>
+          </div>
 
-            <!-- DTI -->
-            <div class="col-md-6">
-              <label class="form-label">DTI Ratio</label>
-              <input class="form-control form-control-lg positive-only"
-                     name="DTIRatio"
-                     type="number"
-                     min="0.000001"
-                     step="any"
-                     required
-                     value="{{ form.DTIRatio if form else '' }}"
-                     placeholder="e.g. 0.35">
-              <div class="helpText">DTI = total debt payments / income (0 to 1+)</div>
-            </div>
-
-            <!-- EDUCATION -->
-            <div class="col-md-6">
-              <label class="form-label">Education</label>
-              <select class="form-select form-select-lg" name="Education" required>
-                <option value="" disabled {% if not form %}selected{% endif %}>Select</option>
-                {% for opt in education_options %}
-                  <option value="{{ opt }}"
-                    {% if form and form.Education == opt %}selected{% endif %}>
-                    {{ opt }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <!-- EMPLOYMENT -->
-            <div class="col-12">
-              <label class="form-label">Employment Type</label>
-              <select class="form-select form-select-lg" name="EmploymentType" required>
-                <option value="" disabled {% if not form %}selected{% endif %}>Select</option>
-                {% for opt in employment_options %}
-                  <option value="{{ opt }}"
-                    {% if form and form.EmploymentType == opt %}selected{% endif %}>
-                    {{ opt }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <!-- BUTTON -->
-            <div class="col-12 d-grid mt-2">
-              <button class="btn btnGlow btn-lg">
+          <div class="col-12">
+            <div class="d-grid mt-2">
+              <button class="btn btnGlow btn-lg" type="submit">
                 Predict Now
                 <span class="btnShine"></span>
               </button>
             </div>
-
-          </form>
-
-          <div class="divider"></div>
-
-          <div class="microTips">
-            <div class="microTip">✅ Credit score 700+ helps</div>
-            <div class="microTip">✅ DTI below 0.40 is safer</div>
-            <div class="microTip">✅ Stable employment matters</div>
           </div>
 
         </div>
-      </div>
+      </form>
 
     </div>
   </div>
 </section>
-
-<!-- Strict Positive Real Number Enforcement -->
-<script>
-document.querySelectorAll('.positive-only').forEach(function(input){
-
-  // Block invalid characters
-  input.addEventListener("keydown", function(e){
-    if (["-", "+", "e", "E"].includes(e.key)) {
-      e.preventDefault();
-    }
-  });
-
-  input.addEventListener("input", function(){
-    if (this.value === "") return;
-
-    let val = parseFloat(this.value);
-
-    if (isNaN(val) || val <= 0) {
-      this.value = "";
-    }
-
-    // Force integer fields
-    if (this.step === "1" && this.value !== "") {
-      this.value = Math.floor(val);
-    }
-  });
-
-});
-</script>
-
 {% endblock %}
