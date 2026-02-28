@@ -184,8 +184,20 @@ def predict():
     except Exception as e:
         return render_template("index.html", error=str(e))
 
+@app.context_processor
+def inject_globals():
+    return {
+        "brand_name": "Loan Default",
+        "social": {
+            "linkedin": "https://www.linkedin.com/in/bhavy-soni-6123a32b0/",
+            "github": "https://github.com/Bhavy123321",
+            "instagram": "#",
+            "twitter": "#",
+        },
+    }
 # -------------------------------------------------
 # RUN
 # -------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
+
