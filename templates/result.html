@@ -4,127 +4,39 @@
 {% block content %}
 <section class="heroWrap">
   <div class="container">
-    <div class="row g-4">
+    <div class="glassCard">
 
-      <div class="col-lg-8">
-        <div class="glassCard">
-          <div class="resultTop">
-            <div>
-              <div class="pill">Prediction Result</div>
-              <h2 class="resultTitle mt-2">{{ status }}</h2>
+      <!-- TOP BAR -->
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <div class="pill">Result</div>
+          <h2 class="heroTitle mt-2">Prediction Output</h2>
+          <p class="heroText mb-0">Your loan prediction result is shown below.</p>
+        </div>
 
-              <div class="text-soft mt-1">
-                {% if proba is not none %}
-                  Default-risk probability: <b>{{ proba }}%</b>
-                  {% if confidence is not none %}
-                    • Confidence: <b>{{ confidence }}%</b>
-                  {% endif %}
-                {% else %}
-                  Probability not available
-                {% endif %}
-              </div>
-            </div>
-
-            <div class="resultBtns">
-              <a class="btn btn-outline-light" href="/">Try Again</a>
-              <a class="btn btn-outline-light" href="/reviews">Add Review</a>
-            </div>
-          </div>
-
-          {% if safe_pct is not none and risk_pct is not none %}
-            <div class="meterWrap mt-3">
-              <div class="meterHead">
-                <div class="text-soft small">Safety vs Risk</div>
-                <div class="meterNums">
-                  <span class="chip ok">Safe: {{ safe_pct }}%</span>
-                  <span class="chip bad">Risk: {{ risk_pct }}%</span>
-                </div>
-              </div>
-              <div class="meter">
-                <div class="meterSafe" style="width: {{ safe_pct }}%"></div>
-                <div class="meterRisk" style="width: {{ risk_pct }}%"></div>
-              </div>
-            </div>
-          {% endif %}
-
-          <div class="divider"></div>
-
-          <div class="grid2">
-            <div class="kv"><div class="k">Age</div><div class="v">{{ age }}</div></div>
-            <div class="kv"><div class="k">Income</div><div class="v">{{ income }}</div></div>
-            <div class="kv"><div class="k">Loan Amount</div><div class="v">{{ loan_amount }}</div></div>
-            <div class="kv"><div class="k">Credit Score</div><div class="v">{{ credit_score }}</div></div>
-            <div class="kv"><div class="k">DTI Ratio</div><div class="v">{{ dti }}</div></div>
-            <div class="kv"><div class="k">Education</div><div class="v">{{ education }}</div></div>
-            <div class="kv wide"><div class="k">Employment</div><div class="v">{{ employment }}</div></div>
-          </div>
-
-          {% if hints %}
-            <div class="hintBox mt-4">
-              <div class="hintTitle">Helpful hints</div>
-              <ul class="mb-0">
-                {% for h in hints %}
-                  <li>{{ h }}</li>
-                {% endfor %}
-              </ul>
-            </div>
-          {% endif %}
-
+        <!-- ✅ NAV BUTTONS -->
+        <div class="d-flex gap-2 flex-wrap">
+          <a class="btn btn-outline-light" href="{{ url_for('dashboard') }}">← Dashboard</a>
+          <a class="btn btn-outline-light" href="{{ url_for('predict') }}">Predict Again</a>
+          <a class="btn btn-outline-light" href="{{ url_for('reviews') }}">Reviews</a>
         </div>
       </div>
 
-      <div class="col-lg-4">
-        <div class="glassCard">
-          <div class="cardTitle">Improve your chances</div>
-          <div class="cardSub mt-1">Simple suggestions</div>
+      <div class="divider"></div>
 
-          <div class="divider"></div>
+      <!-- RESULT -->
+      <div class="featureCard2 text-center">
+        <div class="f2Top">Final Status</div>
 
-          <div class="steps">
-            <div class="step">
-              <div class="stepNum">1</div>
-              <div>
-                <div class="stepTitle">Lower DTI</div>
-                <div class="text-soft">Reduce existing debt payments.</div>
-              </div>
-            </div>
-
-            <div class="step">
-              <div class="stepNum">2</div>
-              <div>
-                <div class="stepTitle">Improve credit score</div>
-                <div class="text-soft">Pay bills on time and keep utilization low.</div>
-              </div>
-            </div>
-
-            <div class="step">
-              <div class="stepNum">3</div>
-              <div>
-                <div class="stepTitle">Balance loan amount</div>
-                <div class="text-soft">Keep it reasonable compared to income.</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
-          <a class="btn btnGlow w-100" href="/about">
-            About this project
-            <span class="btnShine"></span>
-          </a>
-        </div>
-
-        <div class="glassCard mt-3">
-          <div class="cardTitle">Connect</div>
-          <div class="cardSub mt-1">Let’s collaborate</div>
-          <div class="divider"></div>
-          <div class="d-flex gap-2">
-            <a class="qBtn flex-fill text-center" href="{{ social.linkedin }}" target="_blank" rel="noreferrer">LinkedIn</a>
-            <a class="qBtn flex-fill text-center" href="{{ social.github }}" target="_blank" rel="noreferrer">GitHub</a>
-          </div>
-        </div>
-
+        {% if prediction == 0 %}
+          <div class="f2Big" style="color: rgba(46, 213, 115, .95);">{{ result }}</div>
+          <div class="text-soft mt-2">Looks good — based on input values, approval probability is higher.</div>
+        {% else %}
+          <div class="f2Big" style="color: rgba(255, 71, 87, .95);">{{ result }}</div>
+          <div class="text-soft mt-2">Based on the inputs, rejection probability is higher.</div>
+        {% endif %}
       </div>
+
     </div>
   </div>
 </section>
