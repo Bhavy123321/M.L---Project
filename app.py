@@ -29,6 +29,18 @@ def inject_globals():
         },
     }
 
+@app.context_processor
+def inject_globals():
+    return {
+        "brand_name": "Loan Default Predictor",
+        "social": {
+            "linkedin": "https://www.linkedin.com/in/bhavy-soni-6123a32b0/",
+            "github": "https://github.com/Bhavy123321",
+            "instagram": "#",
+            "twitter": "#",
+        },
+    }
+
 # -------------------------------------------------
 # DATABASE HELPERS
 # -------------------------------------------------
@@ -277,3 +289,4 @@ def about():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
