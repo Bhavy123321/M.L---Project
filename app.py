@@ -10,8 +10,24 @@ import pandas as pd
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "database.db")          # history storage
-MODEL_PATH = os.path.join(BASE_DIR, "loan_model.pkl")    # your model file
+DB_PATH = os.path.join(BASE_DIR, "database.db")
+MODEL_PATH = os.path.join(BASE_DIR, "loan_model.pkl")
+
+
+# -------------------------------------------------
+# GLOBAL TEMPLATE VARIABLES (FIXES: 'social' is undefined)
+# -------------------------------------------------
+@app.context_processor
+def inject_globals():
+    return {
+        "brand_name": "Loan Default",
+        "social": {
+            "linkedin": "#",
+            "github": "#",
+            "instagram": "#",
+            "twitter": "#",
+        },
+    }
 
 
 # -------------------------------------------------
@@ -25,12 +41,13 @@ except Exception as e:
 
 
 # -------------------------------------------------
-# DB: only for prediction history (NO USERS/LOGIN)
+# DB: Store prediction history (NO LOGIN)
 # -------------------------------------------------
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("""
+    c.execute(
+        """
         CREATE TABLE IF NOT EXISTS history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             age REAL,
@@ -43,15 +60,17 @@ def init_db():
             prediction INTEGER,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """)
+        """
+    )
     conn.commit()
     conn.close()
-
-init_db()
 
 
 def template_exists(name: str) -> bool:
     return os.path.exists(os.path.join(BASE_DIR, "templates", name))
+
+
+init_db()
 
 
 # -------------------------------------------------
@@ -61,15 +80,15 @@ def template_exists(name: str) -> bool:
 # ✅ Home always opens dashboard
 @app.route("/", methods=["GET"])
 def dashboard():
-    # Read history if exists
+    # Read history (if any)
     conn = sqlite3.connect(DB_PATH)
     df = pd.read_sql_query("SELECT * FROM history ORDER BY id DESC", conn)
     conn.close()
 
     total = len(df)
-    approved = len(df[df["prediction"] == 0])  # if your model uses 0=Approved
-    rejected = len(df[df["prediction"] == 1])  # and 1=Rejected
-    history = df.to_dict(orient="records")
+    approved = len(df[df["prediction"] == 0]) if total else 0
+    rejected = len(df[df["prediction"] == 1]) if total else 0
+    history = df.to_dict(orient="records") if total else []
 
     if template_exists("dashboard.html"):
         return render_template(
@@ -77,10 +96,10 @@ def dashboard():
             total=total,
             approved=approved,
             rejected=rejected,
-            history=history
+            history=history,
         )
 
-    # Fallback if dashboard.html missing
+    # Fallback if dashboard.html is missing
     return f"Dashboard is running ✅ Total predictions: {total}"
 
 
@@ -88,7 +107,7 @@ def dashboard():
 @app.route("/predict", methods=["GET", "POST"])
 def predict():
     if request.method == "GET":
-        # Your repo has index.html for the form
+        # Your form is usually in index.html
         if template_exists("index.html"):
             return render_template("index.html")
         if template_exists("predict.html"):
@@ -100,7 +119,7 @@ def predict():
         return "Model not loaded. Check loan_model.pkl path and requirements."
 
     try:
-        # Match your form field names (edit these only if your HTML uses different names)
+        # Match your form field names (change ONLY if your HTML uses different names)
         age = float(request.form.get("Age", 0))
         income = float(request.form.get("Income", 0))
         loan_amount = float(request.form.get("LoanAmount", 0))
@@ -109,35 +128,42 @@ def predict():
         education = request.form.get("Education", "")
         employment_type = request.form.get("EmploymentType", "")
 
-        # DataFrame for model
-        X = pd.DataFrame([{
-            "Age": age,
-            "Income": income,
-            "LoanAmount": loan_amount,
-            "CreditScore": credit_score,
-            "DTIRatio": dti,
-            "Education": education,
-            "EmploymentType": employment_type
-        }])
+        X = pd.DataFrame(
+            [
+                {
+                    "Age": age,
+                    "Income": income,
+                    "LoanAmount": loan_amount,
+                    "CreditScore": credit_score,
+                    "DTIRatio": dti,
+                    "Education": education,
+                    "EmploymentType": employment_type,
+                }
+            ]
+        )
 
         pred = int(model.predict(X)[0])
 
-        # If your model uses reverse labels, swap these two lines:
+        # If your model uses reverse labels, swap this mapping
         result = "Loan Approved ✅" if pred == 0 else "Loan Rejected ❌"
 
         # Save history
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
-        c.execute("""
+        c.execute(
+            """
             INSERT INTO history (age, income, loan_amount, credit_score, dti, education, employment_type, prediction)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (age, income, loan_amount, credit_score, dti, education, employment_type, pred))
+            """,
+            (age, income, loan_amount, credit_score, dti, education, employment_type, pred),
+        )
         conn.commit()
         conn.close()
 
         # Render result page
         if template_exists("result.html"):
             return render_template("result.html", result=result, prediction=pred)
+
         return result
 
     except Exception as e:
@@ -151,11 +177,13 @@ def about():
         return render_template("about.html")
     return redirect(url_for("dashboard"))
 
+
 @app.route("/contact")
 def contact():
     if template_exists("contact.html"):
         return render_template("contact.html")
     return redirect(url_for("dashboard"))
+
 
 @app.route("/reviews")
 def reviews():
@@ -164,7 +192,7 @@ def reviews():
     return redirect(url_for("dashboard"))
 
 
-# ✅ No login/logout. If something hits /login or /logout, send to dashboard.
+# ✅ No login/logout. If someone hits them, redirect to dashboard.
 @app.route("/login")
 @app.route("/logout")
 def no_auth_routes():
@@ -177,7 +205,9 @@ def handle_404(e):
     return redirect(url_for("dashboard"))
 
 
-# Local run (Render uses gunicorn)
+# -------------------------------------------------
+# Local run (Render uses gunicorn; this is for local)
+# -------------------------------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
