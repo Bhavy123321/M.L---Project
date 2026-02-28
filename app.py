@@ -21,7 +21,10 @@ def inject_globals():
     return {
         "brand_name": "Loan Default",
         "social": {
-            "linkedin": "#", "github": "#", "instagram": "#", "twitter": "#",
+            "linkedin": "#",
+            "github": "#",
+            "instagram": "#",
+            "twitter": "#",
         },
     }
 
@@ -132,7 +135,7 @@ def dashboard():
         trend_counts=trend_df["count"].tolist() if not trend_df.empty else []
     )
 
-# ✅ Predictor Page (GET shows form, POST predicts + saves)
+# ✅ Predictor
 @app.route("/predict", methods=["GET", "POST"])
 def predict():
     if request.method == "GET":
@@ -143,6 +146,7 @@ def predict():
     try:
         model = get_model()
 
+        # Extract form data
         age = float(request.form.get("Age", 0))
         income = float(request.form.get("Income", 0))
         loan_amt = float(request.form.get("LoanAmount", 0))
@@ -161,9 +165,25 @@ def predict():
             "EmploymentType": emp
         }])
 
+        # Prediction class (0/1)
         pred = int(model.predict(X)[0])
 
-        # Save to DB
+        # ✅ Probability + Confidence (fix for % showing blank)
+        safe_prob = 0.0
+        risk_prob = 0.0
+
+        if hasattr(model, "predict_proba"):
+            proba = model.predict_proba(X)[0]  # [prob_class0, prob_class1]
+            safe_prob = round(float(proba[0]) * 100, 2)
+            risk_prob = round(float(proba[1]) * 100, 2)
+        else:
+            # If model doesn't support predict_proba
+            safe_prob = 100.0 if pred == 0 else 0.0
+            risk_prob = 100.0 if pred == 1 else 0.0
+
+        confidence = round(max(safe_prob, risk_prob), 2)
+
+        # Save to SQLite (history)
         conn = sqlite3.connect(DB_PATH)
         cur = conn.cursor()
         cur.execute("""
@@ -177,13 +197,28 @@ def predict():
         conn.close()
 
         status = "Loan Approved ✅" if pred == 0 else "Loan Rejected ❌"
-        return render_template("result.html", result=status, prediction=pred)
+
+        return render_template(
+            "result.html",
+            result=status,
+            prediction=pred,
+            safe_prob=safe_prob,
+            risk_prob=risk_prob,
+            confidence=confidence,
+            # Optional: show user input again on result page
+            age=age,
+            income=income,
+            loan_amount=loan_amt,
+            credit_score=credit,
+            dti_ratio=dti,
+            education=edu,
+            employment_type=emp
+        )
 
     except Exception as e:
-        # if error, show same index page with error
         return render_template("index.html", error=str(e))
 
-# ✅ Reviews Page (GET shows + POST saves)
+# ✅ Reviews
 @app.route("/reviews", methods=["GET", "POST"])
 def reviews():
     if not template_exists("reviews.html"):
@@ -195,7 +230,6 @@ def reviews():
         conn = sqlite3.connect(DB_PATH)
         cur = conn.cursor()
 
-        # POST: Save review
         if request.method == "POST":
             name = (request.form.get("name") or "").strip()
             tag = (request.form.get("tag") or "").strip()
@@ -206,7 +240,7 @@ def reviews():
             except:
                 rating = 5
 
-            rating = max(1, min(5, rating))  # clamp 1..5
+            rating = max(1, min(5, rating))
 
             cur.execute("""
                 INSERT INTO reviews (name, tag, rating, message)
@@ -215,16 +249,12 @@ def reviews():
 
             conn.commit()
             conn.close()
-
-            # Redirect to prevent duplicate submits
             return redirect(url_for("reviews"))
 
-        # GET: Fetch stats
         cur.execute("SELECT COUNT(*), AVG(rating) FROM reviews")
         total_reviews, avg_rating = cur.fetchone()
         avg_rating = round(avg_rating, 1) if avg_rating is not None else 0
 
-        # Fetch latest reviews
         df = pd.read_sql_query("""
             SELECT
                 name,
@@ -257,7 +287,6 @@ def reviews():
             page_error=page_error
         )
 
-# ✅ About (optional)
 @app.route("/about")
 def about():
     if template_exists("about.html"):
