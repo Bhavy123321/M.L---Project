@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for
 import os
 import sqlite3
 import joblib
@@ -26,30 +26,57 @@ def inject_globals():
     }
 
 # -------------------------------------------------
-# DATABASE & MODEL HELPERS
+# DATABASE HELPERS
 # -------------------------------------------------
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
+
+    # History table (dashboard)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            age REAL, income REAL, loan_amount REAL,
-            credit_score REAL, dti REAL, education TEXT,
-            employment_type TEXT, prediction INTEGER,
+            age REAL,
+            income REAL,
+            loan_amount REAL,
+            credit_score REAL,
+            dti REAL,
+            education TEXT,
+            employment_type TEXT,
+            prediction INTEGER,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+
+    # Reviews table
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS reviews (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            tag TEXT,
+            rating INTEGER NOT NULL,
+            message TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
     conn.commit()
     conn.close()
 
 init_db()
 
+# -------------------------------------------------
+# MODEL HELPERS
+# -------------------------------------------------
 _model = None
+
 def get_model():
     global _model
-    if _model is None and os.path.exists(MODEL_PATH):
-        _model = joblib.load(MODEL_PATH)
+    if _model is None:
+        if os.path.exists(MODEL_PATH):
+            _model = joblib.load(MODEL_PATH)
+        else:
+            raise FileNotFoundError(f"Model file not found at: {MODEL_PATH}")
     return _model
 
 def template_exists(name: str) -> bool:
@@ -59,32 +86,40 @@ def template_exists(name: str) -> bool:
 # ROUTES
 # -------------------------------------------------
 
+# ✅ Dashboard
 @app.route("/")
 def dashboard():
     conn = sqlite3.connect(DB_PATH)
-    # Fetch records with aliases that match your HTML (r.Age, r.Income, etc.)
+
     df = pd.read_sql_query("""
         SELECT 
-            created_at, age AS Age, income AS Income, 
-            loan_amount AS LoanAmount, credit_score AS CreditScore, 
-            dti AS DTIRatio, prediction,
+            created_at,
+            age AS Age,
+            income AS Income,
+            loan_amount AS LoanAmount,
+            credit_score AS CreditScore,
+            dti AS DTIRatio,
+            prediction,
             CASE WHEN prediction = 0 THEN 'Approved' ELSE 'Rejected' END as result
-        FROM history ORDER BY id DESC
+        FROM history
+        ORDER BY id DESC
+        LIMIT 50
     """, conn)
-    
-    # Trend Data (Count per day)
+
     trend_df = pd.read_sql_query("""
-        SELECT DATE(created_at) as date, COUNT(*) as count 
-        FROM history GROUP BY DATE(created_at) 
-        ORDER BY date ASC LIMIT 10
+        SELECT DATE(created_at) as date, COUNT(*) as count
+        FROM history
+        GROUP BY DATE(created_at)
+        ORDER BY date ASC
+        LIMIT 10
     """, conn)
+
     conn.close()
 
     total = len(df)
     approved = int((df["prediction"] == 0).sum()) if total else 0
     rejected = int((df["prediction"] == 1).sum()) if total else 0
-    
-    # This list matches {% for r in recent %} in your HTML
+
     recent_list = df.to_dict(orient="records")
 
     return render_template(
@@ -93,10 +128,11 @@ def dashboard():
         approved=approved,
         rejected=rejected,
         recent=recent_list,
-        trend_labels=trend_df['date'].tolist() if not trend_df.empty else [],
-        trend_counts=trend_df['count'].tolist() if not trend_df.empty else []
+        trend_labels=trend_df["date"].tolist() if not trend_df.empty else [],
+        trend_counts=trend_df["count"].tolist() if not trend_df.empty else []
     )
 
+# ✅ Predictor Page (GET shows form, POST predicts + saves)
 @app.route("/predict", methods=["GET", "POST"])
 def predict():
     if request.method == "GET":
@@ -106,7 +142,7 @@ def predict():
 
     try:
         model = get_model()
-        # Extract form data
+
         age = float(request.form.get("Age", 0))
         income = float(request.form.get("Income", 0))
         loan_amt = float(request.form.get("LoanAmount", 0))
@@ -116,18 +152,25 @@ def predict():
         emp = request.form.get("EmploymentType", "")
 
         X = pd.DataFrame([{
-            "Age": age, "Income": income, "LoanAmount": loan_amt,
-            "CreditScore": credit, "DTIRatio": dti,
-            "Education": edu, "EmploymentType": emp
+            "Age": age,
+            "Income": income,
+            "LoanAmount": loan_amt,
+            "CreditScore": credit,
+            "DTIRatio": dti,
+            "Education": edu,
+            "EmploymentType": emp
         }])
 
         pred = int(model.predict(X)[0])
-        
-        # Save to SQLite
+
+        # Save to DB
         conn = sqlite3.connect(DB_PATH)
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO history (age, income, loan_amount, credit_score, dti, education, employment_type, prediction)
+            INSERT INTO history (
+                age, income, loan_amount, credit_score, dti,
+                education, employment_type, prediction
+            )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (age, income, loan_amt, credit, dti, edu, emp, pred))
         conn.commit()
@@ -137,14 +180,84 @@ def predict():
         return render_template("result.html", result=status, prediction=pred)
 
     except Exception as e:
+        # if error, show same index page with error
         return render_template("index.html", error=str(e))
 
-@app.route("/reviews")
+# ✅ Reviews Page (GET shows + POST saves)
+@app.route("/reviews", methods=["GET", "POST"])
 def reviews():
-    if template_exists("reviews.html"):
-        return render_template("reviews.html")
-    return redirect(url_for("dashboard"))
+    if not template_exists("reviews.html"):
+        return redirect(url_for("dashboard"))
 
+    page_error = None
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
+
+        # POST: Save review
+        if request.method == "POST":
+            name = (request.form.get("name") or "").strip()
+            tag = (request.form.get("tag") or "").strip()
+            message = (request.form.get("message") or "").strip()
+
+            try:
+                rating = int(request.form.get("rating", 5))
+            except:
+                rating = 5
+
+            rating = max(1, min(5, rating))  # clamp 1..5
+
+            cur.execute("""
+                INSERT INTO reviews (name, tag, rating, message)
+                VALUES (?, ?, ?, ?)
+            """, (name, tag, rating, message))
+
+            conn.commit()
+            conn.close()
+
+            # Redirect to prevent duplicate submits
+            return redirect(url_for("reviews"))
+
+        # GET: Fetch stats
+        cur.execute("SELECT COUNT(*), AVG(rating) FROM reviews")
+        total_reviews, avg_rating = cur.fetchone()
+        avg_rating = round(avg_rating, 1) if avg_rating is not None else 0
+
+        # Fetch latest reviews
+        df = pd.read_sql_query("""
+            SELECT
+                name,
+                tag,
+                rating,
+                message,
+                strftime('%d-%m-%Y', created_at) AS date
+            FROM reviews
+            ORDER BY id DESC
+            LIMIT 30
+        """, conn)
+
+        conn.close()
+
+        return render_template(
+            "reviews.html",
+            reviews=df.to_dict(orient="records"),
+            total_reviews=total_reviews,
+            avg_rating=avg_rating,
+            page_error=page_error
+        )
+
+    except Exception as e:
+        page_error = str(e)
+        return render_template(
+            "reviews.html",
+            reviews=[],
+            total_reviews=0,
+            avg_rating=0,
+            page_error=page_error
+        )
+
+# ✅ About (optional)
 @app.route("/about")
 def about():
     if template_exists("about.html"):
