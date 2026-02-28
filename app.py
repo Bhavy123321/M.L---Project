@@ -5,7 +5,7 @@ import joblib
 import pandas as pd
 
 # -------------------------------------------------
-# APP CONFIG
+# PATHS / APP
 # -------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
@@ -13,8 +13,9 @@ MODEL_PATH = os.path.join(BASE_DIR, "loan_model.pkl")
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
+
 # -------------------------------------------------
-# GLOBAL TEMPLATE VARIABLES
+# GLOBAL TEMPLATE VARIABLES (fixes: 'social' undefined)
 # -------------------------------------------------
 @app.context_processor
 def inject_globals():
@@ -30,7 +31,7 @@ def inject_globals():
 
 
 # -------------------------------------------------
-# UTILITIES
+# HELPERS
 # -------------------------------------------------
 def log(msg: str):
     print(f"[APP] {msg}", flush=True)
@@ -42,8 +43,8 @@ def template_exists(name: str) -> bool:
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute(
+    cur = conn.cursor()
+    cur.execute(
         """
         CREATE TABLE IF NOT EXISTS history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,12 +62,12 @@ def init_db():
     )
     conn.commit()
     conn.close()
-    log("DB initialized")
+    log("DB ready ✅")
 
 
 init_db()
 
-# Load model lazily (safe for Render startup)
+# lazy-load model (faster startup on Render)
 _model = None
 
 
@@ -84,45 +85,40 @@ def get_model():
 # -------------------------------------------------
 @app.route("/health")
 def health():
-    # Quick response to confirm server is alive
     return jsonify(
         status="ok",
         has_model_file=os.path.exists(MODEL_PATH),
         has_db_file=os.path.exists(DB_PATH),
-        templates=os.listdir(os.path.join(BASE_DIR, "templates")) if os.path.exists(os.path.join(BASE_DIR, "templates")) else [],
     )
 
 
+# ✅ Home opens Dashboard directly
 @app.route("/", methods=["GET"])
 def dashboard():
-    log("GET / (dashboard)")
+    log("GET /")
 
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        df = pd.read_sql_query("SELECT * FROM history ORDER BY id DESC", conn)
-        conn.close()
+    conn = sqlite3.connect(DB_PATH)
+    df = pd.read_sql_query("SELECT * FROM history ORDER BY id DESC", conn)
+    conn.close()
 
-        total = len(df)
-        approved = len(df[df["prediction"] == 0]) if total else 0
-        rejected = len(df[df["prediction"] == 1]) if total else 0
-        history = df.to_dict(orient="records") if total else []
+    total = len(df)
+    approved = int((df["prediction"] == 0).sum()) if total else 0
+    rejected = int((df["prediction"] == 1).sum()) if total else 0
+    history = df.to_dict(orient="records") if total else []
 
-        if template_exists("dashboard.html"):
-            return render_template(
-                "dashboard.html",
-                total=total,
-                approved=approved,
-                rejected=rejected,
-                history=history,
-            )
+    if template_exists("dashboard.html"):
+        return render_template(
+            "dashboard.html",
+            total=total,
+            approved=approved,
+            rejected=rejected,
+            history=history,
+        )
 
-        return f"Dashboard is running ✅ Total predictions: {total}"
-
-    except Exception as e:
-        log(f"Dashboard error: {e}")
-        return f"Dashboard Error: {str(e)}", 500
+    return f"Dashboard running ✅ Total predictions: {total}"
 
 
+# ✅ Show form on GET, predict on POST
 @app.route("/predict", methods=["GET", "POST"])
 def predict():
     log(f"{request.method} /predict")
@@ -130,22 +126,19 @@ def predict():
     if request.method == "GET":
         if template_exists("index.html"):
             return render_template("index.html")
-        if template_exists("predict.html"):
-            return render_template("predict.html")
-        return "Prediction form template not found (index.html / predict.html).", 404
+        return "index.html not found in templates folder.", 404
 
-    # POST
+    # POST -> prediction
     try:
         model = get_model()
 
-        # Make sure these match your HTML form names
         age = float(request.form.get("Age", 0))
         income = float(request.form.get("Income", 0))
         loan_amount = float(request.form.get("LoanAmount", 0))
         credit_score = float(request.form.get("CreditScore", 0))
         dti = float(request.form.get("DTIRatio", 0))
-        education = request.form.get("Education", "")
-        employment_type = request.form.get("EmploymentType", "")
+        education = (request.form.get("Education") or "").strip()
+        employment_type = (request.form.get("EmploymentType") or "").strip()
 
         X = pd.DataFrame([{
             "Age": age,
@@ -160,10 +153,10 @@ def predict():
         pred = int(model.predict(X)[0])
         result = "Loan Approved ✅" if pred == 0 else "Loan Rejected ❌"
 
-        # Save history
+        # save to DB
         conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute(
+        cur = conn.cursor()
+        cur.execute(
             """
             INSERT INTO history (age, income, loan_amount, credit_score, dti, education, employment_type, prediction)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -180,29 +173,30 @@ def predict():
 
     except Exception as e:
         log(f"Predict error: {e}")
+        # show form again with error (if index exists)
+        if template_exists("index.html"):
+            return render_template("index.html", error=str(e), form=request.form), 400
         return f"Prediction Error: {str(e)}", 500
 
 
 @app.route("/about")
 def about():
-    if template_exists("about.html"):
-        return render_template("about.html")
-    return redirect(url_for("dashboard"))
+    return render_template("about.html") if template_exists("about.html") else redirect(url_for("dashboard"))
 
 
 @app.route("/reviews")
 def reviews():
-    if template_exists("reviews.html"):
-        return render_template("reviews.html")
-    return redirect(url_for("dashboard"))
+    return render_template("reviews.html") if template_exists("reviews.html") else redirect(url_for("dashboard"))
 
 
+# No login/logout in project
 @app.route("/login")
 @app.route("/logout")
 def no_auth_routes():
     return redirect(url_for("dashboard"))
 
 
+# redirect unknown routes to dashboard
 @app.errorhandler(404)
 def handle_404(e):
     return redirect(url_for("dashboard"))
